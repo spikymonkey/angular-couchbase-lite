@@ -1,0 +1,31 @@
+{
+  "name": "angular-couchbase-lite",
+  "version": "0.0.1",
+  "authors": [
+    "Gareth Clay <gareth.clay@gmail.com>"
+  ],
+  "description": "An AngularJS wrapper for the Couchbase Lite REST API",
+  "main": "angular-couchbase-lite.js",
+  "keywords": [
+    "angularjs",
+    "couchbase-lite"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/spikymonkey/angular-couchbase-lite",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "*.iml",
+    "test",
+    "tests",
+    "karma.conf.js",
+    "node_modules"
+  ],
+  "dependencies": {
+    "angular": "~1.2.22",
+    "angular-resource": "~1.2.22"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.2.22"
+  }
+}
