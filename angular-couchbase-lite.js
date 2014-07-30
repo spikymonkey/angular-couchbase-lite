@@ -25,14 +25,19 @@
 (function() {
   angular.module('couchbaseLite', ['ngResource'])
     .factory('couchbaseLite', function couchbaseLiteProvider($resource, couchbaseLiteUrl) {
+      var server = $resource(couchbaseLiteUrl);
+
       return {
+        info: function() { return server.get().$promise; },
+
         database: function (name) {
           var db = $resource(':url/:name',
                              {url: couchbaseLiteUrl, name: name},
                              {'create': {method: 'PUT'}});
+
           return {
             create: function () {
-              db.create();
+              return db.create().$promise;
             }
           }
         }
