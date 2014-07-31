@@ -26,17 +26,16 @@
   angular.module('cblite', ['ngResource'])
     .factory('cblite', function cbliteFactory($resource, $log, $q) {
 
-      var serverUrl;
       var initialised = $q.defer();
+      var serverUrl;
+
 
       function resource(url, paramDefaults, actions, options) {
-        var resource = $resource(serverUrl + url, paramDefaults, actions, options);
-
         if (serverUrl) {
-          return resource;
+          return $resource(serverUrl + url, paramDefaults, actions, options);
         } else {
-          initialised.promise.then(function () {
-            return resource;
+          return initialised.promise.then(function () {
+            return $resource(serverUrl + url, paramDefaults, actions, options);
           });
         }
       };
@@ -65,14 +64,8 @@
         },
 
         // Couchbase Lite Server
-        server: function () {
-          var server = resource('');
-
-          return {
-            info: function () {
-              return server.get().$promise;
-            }
-          }
+        info: function () {
+          return resource('').get().$promise;
         },
 
         // Databases

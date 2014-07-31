@@ -52,7 +52,7 @@ describe('Couchbase Lite', function() {
       $httpBackend.expectGET(url).respond(200, response);
 
       runs(function() {
-        return cblite.server().info()
+        return cblite.info()
           .then(function(info) {
             expect(info).toContainAll(response);
           });
