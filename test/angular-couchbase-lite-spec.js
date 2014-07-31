@@ -1,4 +1,4 @@
-describe('Couchbase Lite', function() {
+describe('Angular Couchbase Lite -', function() {
 
   var $httpBackend;
   var url = "my.couchbase.lite";
@@ -31,11 +31,9 @@ describe('Couchbase Lite', function() {
   beforeEach(inject(function($injector, _cblite_) {
     $httpBackend = $injector.get('$httpBackend');
     cblite = _cblite_;
-    cblite.deviceReady();
   }));
 
   afterEach(function() {
-    //$httpBackend.flush();
     $httpBackend.verifyNoOutstandingExpectation();
     $httpBackend.verifyNoOutstandingRequest();
   });
@@ -107,5 +105,4 @@ describe('Couchbase Lite', function() {
       });
     });
   });
-
 });

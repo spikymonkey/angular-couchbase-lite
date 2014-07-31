@@ -1,7 +1,7 @@
 /*
  The MIT License
 
- Copyright (c) 2013-2014 Gareth Clay
+ Copyright (c) 2014 Gareth Clay
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,45 +24,29 @@
 
 (function() {
   angular.module('cblite', ['ngResource'])
-    .factory('cblite', function cbliteFactory($resource, $log, $q) {
+    .factory('cblite', function cbliteFactory($resource, $log) {
 
-      var initialised = $q.defer();
       var serverUrl;
 
+      // Grab the Couchbase Lite URL via the native bridge
+      if (window.cblite) {
+        window.cblite.getURL(function (err, url) {
+          if (err) {
+            throw("Unable to connect to Couchbase Lite: " + err);
+          } else {
+            $log.info("Couchbase Lite running at " + url);
+            serverUrl = url;
+          }
+        });
+      } else {
+        throw("Couchbase Lite plugin not found.");
+      }
 
       function resource(url, paramDefaults, actions, options) {
-        if (serverUrl) {
-          return $resource(serverUrl + url, paramDefaults, actions, options);
-        } else {
-          return initialised.promise.then(function () {
-            return $resource(serverUrl + url, paramDefaults, actions, options);
-          });
-        }
+        return $resource(serverUrl + url, paramDefaults, actions, options);
       };
 
       return {
-        deviceReady: function() {
-          if (serverUrl) throw("Angular Couchbase Lite has already been initialised!");
-
-          // Grab the Couchbase Lite URL via the native bridge
-          $log.debug("deviceReady() called, getting Couchbase Lite URL");
-
-          if (window.cblite) {
-            window.cblite.getURL(function (err, url) {
-              if (err) {
-                $log.error("Unable to connect to Couchbase Lite: " + err);
-                initialised.reject(err);
-              } else {
-                $log.info("Couchbase Lite running at " + url);
-                serverUrl = url;
-                initialised.resolve(url);
-              }
-            });
-          } else {
-            $log.error("Couchbase Lite plugin not found.");
-          }
-        },
-
         // Couchbase Lite Server
         info: function () {
           return resource('').get().$promise;
