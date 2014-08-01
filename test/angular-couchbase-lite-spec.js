@@ -3,7 +3,7 @@ describe('Angular Couchbase Lite -', function () {
   var $httpBackend;
   var url = "my.couchbase.lite";
   var dbname = "my-database";
-  var cbliteProvider, cblite;
+  var cblite;
 
   window.cblite = {
     getURL: function (callback) {
@@ -26,13 +26,12 @@ describe('Angular Couchbase Lite -', function () {
   });
 
 
-  beforeEach(module('cblite', function(_cbliteProvider_) {
-    cbliteProvider = _cbliteProvider_;
-  }));
+  beforeEach(module('cblite'));
 
   beforeEach(inject(function($injector, _cblite_) {
     $httpBackend = $injector.get('$httpBackend');
     cblite = _cblite_;
+    document.dispatchEvent(new Event('deviceready'));
   }));
 
   afterEach(function() {
@@ -45,8 +44,7 @@ describe('Angular Couchbase Lite -', function () {
       var response = {
         "couchdb" : "Welcome",
         "CouchbaseLite" : "Welcome",
-        "version" : "1.485",
-        "foo": "bar"
+        "version" : "1.485"
       };
 
       $httpBackend.expectGET(url).respond(200, response);
@@ -71,6 +69,7 @@ describe('Angular Couchbase Lite -', function () {
             expect(result).toContainAll(response);
           });
       });
+
     });
 
     it("can't be created again", function() {

@@ -28,15 +28,14 @@
 
       var cordova = $q.defer(), cbliteUrl = $q.defer();
 
-      function deviceReady() {
-        console.log('deviceReady() called');
+      var deviceReady = function () {
+        cordova.notify("Notified that Cordova is ready");
         cordova.resolve();
         getUrl();
-      }
-      
-//      document.addEventListener('deviceready', deviceReady, false);
-      deviceReady();
-      
+      };
+
+      document.addEventListener('deviceready', deviceReady, false);
+
       function getUrl() {
         // Grab the Couchbase Lite URL via the native bridge
         if (window.cblite) {
@@ -44,7 +43,11 @@
             if (err) {
               cbliteUrl.reject(err);
             } else {
-              $log.info("Couchbase Lite running at " + url);
+              // Trim the trailing slash if there is one
+              if (url.indexOf('/', this.length - 1) !== -1) {
+                url = url.substring(0, url.length - 1);
+              }
+              cbliteUrl.notify("Couchbase Lite is running at " + url);
               cbliteUrl.resolve(url);
             }
           });
@@ -53,22 +56,26 @@
         }
       }
       
-      function resource(path, paramDefaults, actions, options) {    
-        return cordova.promise.then(function () {
-          console.log('cordova promise complete')
-          return cbliteUrl.promise.then(function (url) {
-            console.log('url promise complete')
-            return $resource(url + path, paramDefaults, actions, options);
-          })
-        });
+      function resource(path, paramDefaults, actions, options) {
+        return cordova.promise.then(
+          function () {
+            return cbliteUrl.promise.then(function (url) {
+              return $resource(url + path, paramDefaults, actions, options);
+            })
+          },
+          null,
+          function(notification) {
+            var message = "Angular Couchbase Lite: " + notification;
+            console.log(message); // For testing
+            $log.debug(message);
+          });
       }
 
       return {
         // Couchbase Lite Server
         info: function () {
           return resource('').then(function (server) {
-            console.log(JSON.stringify(server));
-            server.get().$promise;
+            return server.get().$promise;
           });
         },
 
@@ -81,7 +88,7 @@
           return {
             create: function () {
               return getDatabase.then(function (db) {
-                db.create().$promise;
+                return db.create().$promise;
               });
             },
 
@@ -94,7 +101,7 @@
               return {
                 save: function (content) {
                   return getDocument.then(function (document) {
-                    document.create(content).$promise;
+                    return document.create(content).$promise;
                   });
                 }
               };
