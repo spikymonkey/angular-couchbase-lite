@@ -22,61 +22,85 @@
  THE SOFTWARE.
  */
 
-(function() {
+(function () {
   angular.module('cblite', ['ngResource'])
-    .factory('cblite', function cbliteFactory($resource, $log) {
+    .factory('cblite', function cbliteFactory($resource, $log, $q) {
 
-      var serverUrl;
+      var cordova = $q.defer(), cbliteUrl = $q.defer();
 
-      // Grab the Couchbase Lite URL via the native bridge
-      if (window.cblite) {
-        window.cblite.getURL(function (err, url) {
-          if (err) {
-            throw("Unable to connect to Couchbase Lite: " + err);
-          } else {
-            $log.info("Couchbase Lite running at " + url);
-            serverUrl = url;
-          }
-        });
-      } else {
-        throw("Couchbase Lite plugin not found.");
+      function deviceReady() {
+        console.log('deviceReady() called');
+        cordova.resolve();
+        getUrl();
       }
-
-      function resource(url, paramDefaults, actions, options) {
-        return $resource(serverUrl + url, paramDefaults, actions, options);
-      };
+      
+//      document.addEventListener('deviceready', deviceReady, false);
+      deviceReady();
+      
+      function getUrl() {
+        // Grab the Couchbase Lite URL via the native bridge
+        if (window.cblite) {
+          window.cblite.getURL(function (err, url) {
+            if (err) {
+              cbliteUrl.reject(err);
+            } else {
+              $log.info("Couchbase Lite running at " + url);
+              cbliteUrl.resolve(url);
+            }
+          });
+        } else {
+          throw ("Couchbase Lite plugin not found.");
+        }
+      }
+      
+      function resource(path, paramDefaults, actions, options) {    
+        return cordova.promise.then(function () {
+          console.log('cordova promise complete')
+          return cbliteUrl.promise.then(function (url) {
+            console.log('url promise complete')
+            return $resource(url + path, paramDefaults, actions, options);
+          })
+        });
+      }
 
       return {
         // Couchbase Lite Server
         info: function () {
-          return resource('').get().$promise;
+          return resource('').then(function (server) {
+            console.log(JSON.stringify(server));
+            server.get().$promise;
+          });
         },
 
         // Databases
         database: function (databaseName) {
-          var database = resource('/:db',
+          var getDatabase = resource('/:db',
             {db: databaseName},
             {'create': {method: 'PUT'}});
 
           return {
             create: function () {
-              return database.create().$promise;
+              return getDatabase.then(function (db) {
+                db.create().$promise;
+              });
             },
 
             // Documents
             document: function (id) {
-              var document = resource('/:db/:doc',
+              var getDocument = resource('/:db/:doc',
                 {db: databaseName, doc: id},
                 {'create': {method: 'PUT'}});
 
               return {
                 save: function (content) {
-                  return document.create(content).$promise;
+                  return getDocument.then(function (document) {
+                    document.create(content).$promise;
+                  });
                 }
-              }
+              };
             }
-          }
+          };
         }
-      }
-    })
-}).call();
+      };
+    });
+}());

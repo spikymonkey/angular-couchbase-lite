@@ -1,4 +1,4 @@
-describe('Angular Couchbase Lite -', function() {
+describe('Angular Couchbase Lite -', function () {
 
   var $httpBackend;
   var url = "my.couchbase.lite";
@@ -6,17 +6,19 @@ describe('Angular Couchbase Lite -', function() {
   var cbliteProvider, cblite;
 
   window.cblite = {
-    getURL: function(callback) {
+    getURL: function (callback) {
       callback(null, url);
     }
   };
 
-  beforeEach(function() {
+  beforeEach(function () {
     this.addMatchers({
-      toContainAll: function(expected) {
+      toContainAll: function (expected) {
         var property;
         for (property in expected) {
-          if (this.actual.hasOwnProperty(property) && this.actual[property] !== expected[property]) return false;
+          if (this.actual.hasOwnProperty(property) && this.actual[property] !== expected[property]) {
+            return false;
+          }
         }
         return true;
       }
