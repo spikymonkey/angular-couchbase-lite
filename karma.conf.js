@@ -20,6 +20,7 @@ module.exports = function(config) {
       'bower_components/angular/angular.js',
       'bower_components/angular-resource/angular-resource.js',
       'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/angular-utf8-base64/angular-utf8-base64.js',
       'angular-couchbase-lite.js',
       'test/**/*-spec.js'
     ],

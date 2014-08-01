@@ -1,13 +1,15 @@
 describe('Angular Couchbase Lite -', function () {
 
   var $httpBackend;
-  var url = "my.couchbase.lite";
+  var url = "my.couchbase.lite"
+  var cbliteUrl = "http://username:password@" + url + "/";
+  var restUrl = "http://username@" + url;
   var dbname = "my-database";
   var cblite;
 
   window.cblite = {
     getURL: function (callback) {
-      callback(null, url);
+      callback(null, cbliteUrl);
     }
   };
 
@@ -47,7 +49,7 @@ describe('Angular Couchbase Lite -', function () {
         "version" : "1.485"
       };
 
-      $httpBackend.expectGET(url).respond(200, response);
+      $httpBackend.expectGET(restUrl).respond(200, response);
 
       runs(function() {
         return cblite.info()
@@ -59,9 +61,10 @@ describe('Angular Couchbase Lite -', function () {
   });
 
   describe('databases', function() {
+
     it('can be created', function() {
       var response = {ok: true};
-      $httpBackend.expectPUT(url + "/" + dbname).respond(200, response);
+      $httpBackend.expectPUT(restUrl + "/" + dbname).respond(200, response);
 
       runs(function() {
         return cblite.database(dbname).create()
@@ -77,7 +80,7 @@ describe('Angular Couchbase Lite -', function () {
         "status" : 412,
         "error" : "file_exists"
       };
-      $httpBackend.expectPUT(url + "/" + dbname).respond(412, response);
+      $httpBackend.expectPUT(restUrl + "/" + dbname).respond(412, response);
 
       runs(function() {
         return cblite.database(dbname).create()
@@ -96,7 +99,7 @@ describe('Angular Couchbase Lite -', function () {
         "rev" : "1-4101356e9c47d15d4f8f7390d05dbbcf",
         "ok" : true
       };
-      $httpBackend.expectPUT(url + "/" + dbname + "/" + documentId).respond(201, response);
+      $httpBackend.expectPUT(restUrl + "/" + dbname + "/" + documentId).respond(201, response);
 
       runs(function() {
         return cblite.database(dbname).document(documentId).save()
