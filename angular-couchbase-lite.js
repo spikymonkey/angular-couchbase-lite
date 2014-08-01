@@ -67,16 +67,16 @@
       }
 
 
-      function resource(path, paramDefaults, actions, options) {
+      function resource(path, paramDefaults) {
         return cbliteUrlPromise.then(
           function (parsedUrl) {
             var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
-            actions = {
-              'get': {method: 'GET', headers: headers},
+            var actions = {
+              'info': {method: 'GET', headers: headers},
               'create': {method: 'PUT', headers: headers}
             };
 
-            return $resource(parsedUrl.url + path, paramDefaults, actions, options);
+            return $resource(parsedUrl.url + path, paramDefaults, actions);
           },
           null,
           function(notification) {
@@ -91,17 +91,32 @@
         info: function () {
           $log.debug("Asking for Couchbase Lite server info");
           return resource('').then(function (server) {
-            return server.get().$promise;
+            return server.info().$promise;
           });
         },
 
         // Databases
         database: function (databaseName) {
-          var getDatabase = resource(':db',
-            {db: databaseName},
-            {'create': {method: 'PUT'}});
+          var getDatabase = resource(':db', {db: databaseName});
 
           return {
+            info: function() {
+              $log.debug("Asking Couchbase Lite for info about database " + databaseName);
+              return getDatabase.then(function (db) {
+                return db.info({}, null).$promise;
+              });
+            },
+
+            exists: function () {
+              $log.debug("Asking Couchbase Lite if database " + databaseName + " exists");
+              return getDatabase.then(function (db) {
+                return db.info({}, null).$promise.then(
+                  function (info) { return true; },
+                  function (error) { return false; }
+                );
+              });
+            },
+
             create: function () {
               $log.debug("Asking Couchbase Lite to create database " + databaseName);
               return getDatabase.then(function (db) {
@@ -111,9 +126,7 @@
 
             // Documents
             document: function (id) {
-              var getDocument = resource(':db/:doc',
-                {db: databaseName, doc: id},
-                {'create': {method: 'PUT'}});
+              var getDocument = resource(':db/:doc', {db: databaseName, doc: id});
 
               return {
                 save: function (content) {

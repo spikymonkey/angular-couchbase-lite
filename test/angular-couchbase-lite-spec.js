@@ -1,4 +1,4 @@
-describe('Angular Couchbase Lite -', function () {
+describe('Angular Couchbase Lite', function () {
 
   var $httpBackend;
   var url = "my.couchbase.lite"
@@ -61,6 +61,84 @@ describe('Angular Couchbase Lite -', function () {
   });
 
   describe('databases', function() {
+
+    it('can be queried for information', function() {
+      var response = {
+        "instance_start_time" : 1386620242527997,
+        "committed_update_seq" : 25800,
+        "disk_size" : 15360000,
+        "purge_seq" : 0,
+        "db_uuid" : "65FB16DF-FFD7-4514-9E8D-B734B066D28D",
+        "doc_count" : 5048,
+        "db_name" : dbname,
+        "update_seq" : 25800,
+        "disk_format_version" : 11
+      };
+
+      $httpBackend.expectGET(restUrl + "/" + dbname).respond(200, response);
+
+      runs(function() {
+        return cblite.database(dbname).info()
+          .then(function(result) {
+            expect(result).toContainAll(response);
+          });
+      });
+    });
+
+    it("can't be queried for information if they don't exist", function() {
+      var response = {
+        "status" : 404,
+        "error" : "not_found"
+      };
+
+      $httpBackend.expectGET(restUrl + "/" + dbname).respond(404, response);
+
+      runs(function() {
+        return cblite.database(dbname).info()
+          .catch(function(error) {
+            expect(error).toContainAll(response);
+          });
+      });
+    });
+
+    it('that exist can be tested for existence', function() {
+      var response = {
+        "instance_start_time" : 1386620242527997,
+        "committed_update_seq" : 25800,
+        "disk_size" : 15360000,
+        "purge_seq" : 0,
+        "db_uuid" : "65FB16DF-FFD7-4514-9E8D-B734B066D28D",
+        "doc_count" : 5048,
+        "db_name" : dbname,
+        "update_seq" : 25800,
+        "disk_format_version" : 11
+      };
+
+      $httpBackend.expectGET(restUrl + "/" + dbname).respond(200, response);
+
+      runs(function() {
+        return cblite.database(dbname).exists()
+          .then(function(exists) {
+            expect(exists).toBe(true);
+          });
+      });
+    });
+
+    it("that don't exist can be tested for existence", function() {
+      var response = {
+        "status" : 404,
+        "error" : "not_found"
+      };
+
+      $httpBackend.expectGET(restUrl + "/" + dbname).respond(404, response);
+
+      runs(function() {
+        return cblite.database(dbname).exists()
+          .then(function(exists) {
+            expect(exists).toBe(false);
+          });
+      });
+    });
 
     it('can be created', function() {
       var response = {ok: true};
