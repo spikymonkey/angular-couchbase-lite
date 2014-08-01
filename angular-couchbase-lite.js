@@ -72,8 +72,9 @@
           function (parsedUrl) {
             var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
             var actions = {
-              'info': {method: 'GET', headers: headers},
-              'create': {method: 'PUT', headers: headers}
+              'get':  {method: 'GET',  headers: headers},
+              'put':  {method: 'PUT',  headers: headers},
+              'post': {method: 'POST', headers: headers}
             };
 
             return $resource(parsedUrl.url + path, paramDefaults, actions);
@@ -81,7 +82,6 @@
           null,
           function(notification) {
             var message = "Angular Couchbase Lite: " + notification;
-            console.log(message); // For testing
             $log.debug(message);
           });
       }
@@ -91,7 +91,7 @@
         info: function () {
           $log.debug("Asking for Couchbase Lite server info");
           return resource('').then(function (server) {
-            return server.info().$promise;
+            return server.get().$promise;
           });
         },
 
@@ -101,16 +101,16 @@
 
           return {
             info: function() {
-              $log.debug("Asking Couchbase Lite for info about database " + databaseName);
+              $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
               return getDatabase.then(function (db) {
-                return db.info({}, null).$promise;
+                return db.get({}, null).$promise;
               });
             },
 
             exists: function () {
-              $log.debug("Asking Couchbase Lite if database " + databaseName + " exists");
+              $log.debug("Asking Couchbase Lite if database [" + databaseName + "] exists");
               return getDatabase.then(function (db) {
-                return db.info({}, null).$promise.then(
+                return db.get({}, null).$promise.then(
                   function (info) { return true; },
                   function (error) { return false; }
                 );
@@ -118,21 +118,47 @@
             },
 
             create: function () {
-              $log.debug("Asking Couchbase Lite to create database " + databaseName);
+              $log.debug("Asking Couchbase Lite to create database [" + databaseName + "]");
               return getDatabase.then(function (db) {
-                return db.create({}, null).$promise;
+                return db.put({}, null).$promise;
               });
             },
 
             // Documents
             document: function (id) {
-              var getDocument = resource(':db/:doc', {db: databaseName, doc: id});
-
               return {
                 save: function (content) {
-                  $log.debug("Asking Couchbase Lite to save document " + id + " in database " + databaseName);
-                  return getDocument.then(function (document) {
-                    return document.create(content).$promise;
+                  var type = typeof (content);
+                  switch (type) {
+                    case "undefined":
+                    case "number":
+                    case "boolean":
+                    case "function":
+                    case "symbol":
+                      throw "You can't save this type: " + type;
+                      break;
+
+                    case "object":
+                      if (content === null) {
+                        throw "You can't save a null document"
+                      }
+                      break;
+                  }
+
+                  if (!angular.isDefined(id)) {
+                    // If no id has been provided, then see if we can pull one from the document
+                    id = content._id;
+                    if (id === null || !angular.isDefined(id)) {
+                      $log.debug("Asking Couchbase Lite to save document with a database-generated id in database [" + databaseName + "]");
+                      return resource(':db', {db: databaseName}).then(function (database) {
+                        return database.post(content).$promise;
+                      });
+                    }
+                  }
+
+                  $log.debug("Asking Couchbase Lite to save document with id [" + id + "] in database [" + databaseName + "]");
+                  return resource(':db/:doc', {db: databaseName, doc: id}).then(function (document) {
+                    return document.put(content).$promise;
                   });
                 }
               };
