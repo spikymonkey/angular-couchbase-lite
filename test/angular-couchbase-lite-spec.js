@@ -4,6 +4,7 @@ describe('Angular Couchbase Lite', function () {
   var url = "my.couchbase.lite"
   var cbliteUrl = "http://username:password@" + url + "/";
   var restUrl = "http://username@" + url;
+  var syncUrl = "http://my.sync.gateway";
   var dbname = "my-database";
   var cblite;
 
@@ -238,23 +239,44 @@ describe('Angular Couchbase Lite', function () {
     });
 
     it('can be saved without an id, allowing the server to generate one for us', function() {
-      var document = {
+      var documentId = "209BB170-C1E0-473E-B3C4-A4533ACA3CDD";
+      var content1 = {
         foo: "bar"
       };
-      var response = {
-        "id" : "209BB170-C1E0-473E-B3C4-A4533ACA3CDD",
+      var response1 = {
+        "id" : documentId,
         "rev" : "1-4101356e9c47d15d4f8f7390d05dbbcf",
         "ok" : true
       };
-      $httpBackend.expectPOST(restUrl + "/" + dbname, document, expectedHeaders)
-        .respond(201, response);
+      var content2 = {
+        foo: "bar",
+        bar: "baz"
+      };
+      var response2 = {
+        "id" : documentId,
+        "rev" : "1-5101356e9c47d15d4f8f7390d05dbbcf",
+        "ok" : true
+      };
+
+      $httpBackend.expectPOST(restUrl + "/" + dbname, content1, expectedHeaders)
+        .respond(201, response1);
+      $httpBackend.expectPUT(restUrl + "/" + dbname + "/" + documentId, content2, expectedHeaders)
+        .respond(201, response2);
 
       runs(function() {
-        return cblite.database(dbname).document().save(document)
+        var document = cblite.database(dbname).document();
+        return document.save(content1)
           .then(function(result) {
-            expect(result).toContainAll(response);
+            expect(result).toContainAll(response1);
+
+            // Save again and we should now be reusing the id from last time
+            return document.save(content2)
+              .then(function(result) {
+                expect(result).toContainAll(response2);
+              });
           });
       });
+
     });
   });
 });
