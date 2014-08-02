@@ -4,6 +4,7 @@ describe('Angular Couchbase Lite', function () {
   var url = "my.couchbase.lite"
   var cbliteUrl = "http://username:password@" + url + "/";
   var restUrl = "http://username@" + url;
+  var replicationUrl = "http://" + url;
   var syncUrl = "http://my.sync.gateway";
   var dbname = "my-database";
   var cblite;
@@ -277,6 +278,47 @@ describe('Angular Couchbase Lite', function () {
           });
       });
 
+    });
+  });
+
+  describe('one-off replication', function() {
+    it("can be initiated from local -> remote", function () {
+      var request = {
+        source: replicationUrl + "/" + dbname,
+        target: syncUrl + "/" + dbname
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
+
+      runs(function () {
+        return cblite.database(dbname).replicateTo(syncUrl).then(function (result) {
+            expect(result).toContainAll(response);
+          });
+      })
+    });
+
+    it("can be initiated from remote -> local", function () {
+      var request = {
+        source: syncUrl + "/" + dbname,
+        target: replicationUrl + "/" + dbname
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
+
+      runs(function () {
+        return cblite.database(dbname).replicateFrom(syncUrl)
+          .then(function (result) {
+            expect(result).toContainAll(response);
+          });
+      });
     });
   });
 });

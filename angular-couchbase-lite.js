@@ -33,16 +33,17 @@
       var cblite;
 
       function deviceReady() {
-
         function ParsedUrl(url) {
           // Trim off the leading 'http://'
-          var credentials = url.slice(7, url.indexOf('@')),
+          var http = "http://";
+          var credentials = url.slice(http.length, url.indexOf('@')),
             basicAuthToken = base64.encode(credentials);
 
           return {
             credentials: credentials,
             basicAuthToken: basicAuthToken,
-            url: url
+            url: url,
+            urlNoCredentials: http + url.slice(http.length +credentials.length + 1) // '@' symbol
           };
         }
 
@@ -54,7 +55,7 @@
                 deferredCBLiteUrl.reject(err);
               } else {
                 deferredCBLiteUrl.notify("Couchbase Lite is running at " + url);
-                cblite = new ParsedUrl(url)
+                cblite = new ParsedUrl(url);
                 deferredCBLiteUrl.resolve(cblite);
               }
             });
@@ -67,7 +68,6 @@
         deferredCordova.resolve();
         getUrl();
       }
-
 
       function resource(path, paramDefaults) {
         return cbliteUrlPromise.then(
@@ -176,6 +176,27 @@
                   });
                 }
               };
+            },
+
+            // Replication and sync
+            replicateTo: function (targetUrl) {
+              return openReplication.then(function (replication) {
+                var request = {
+                  source: cblite.urlNoCredentials + databaseName,
+                  target: (targetUrl.slice(-1) === '/' ? targetUrl : targetUrl + '/') + databaseName
+                };
+                return replication.post(request).$promise;
+              })
+            },
+
+            replicateFrom: function (sourceUrl) {
+              return openReplication.then(function (replication) {
+                var request = {
+                  source: (sourceUrl.slice(-1) === '/' ? sourceUrl : sourceUrl + '/') + databaseName,
+                  target: cblite.urlNoCredentials + databaseName
+                };
+                return replication.post(request).$promise;
+              })
             }
           };
         }
