@@ -1,4 +1,5 @@
 angular
 angular-mocks
 angular-resource
+angular-utf8-base64
 jasmine
