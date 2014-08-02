@@ -179,24 +179,36 @@
             },
 
             // Replication and sync
-            replicateTo: function (targetUrl) {
+            replicateTo: function (remoteUrl) {
               return openReplication.then(function (replication) {
                 var request = {
                   source: cblite.urlNoCredentials + databaseName,
-                  target: (targetUrl.slice(-1) === '/' ? targetUrl : targetUrl + '/') + databaseName
+                  target: (remoteUrl.slice(-1) === '/' ? remoteUrl : remoteUrl + '/') + databaseName
                 };
                 return replication.post(request).$promise;
               })
             },
 
-            replicateFrom: function (sourceUrl) {
+            replicateFrom: function (remoteUrl) {
               return openReplication.then(function (replication) {
                 var request = {
-                  source: (sourceUrl.slice(-1) === '/' ? sourceUrl : sourceUrl + '/') + databaseName,
+                  source: (remoteUrl.slice(-1) === '/' ? remoteUrl : remoteUrl + '/') + databaseName,
                   target: cblite.urlNoCredentials + databaseName
                 };
                 return replication.post(request).$promise;
               })
+            },
+
+            syncWith: function (remoteUrl) {
+              var that = this;
+              return that.replicateTo(remoteUrl).then(function (localToRemoteResponse) {
+                return that.replicateFrom(remoteUrl).then(function (remoteToLocalResponse) {
+                  return {
+                    localToRemote: localToRemoteResponse,
+                    remoteToLocal: remoteToLocalResponse
+                  }
+                });
+              });
             }
           };
         }
