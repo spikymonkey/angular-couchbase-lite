@@ -123,6 +123,22 @@
             }
           }
 
+          function toReplicationSpec(spec) {
+            function trimTrailingSlash(url) {
+              return (url.slice(-1) === '/' ? url : url + '/')
+            }
+
+            if (typeof spec === 'string') {
+              spec = {
+                url: trimTrailingSlash(spec),
+                continuous: false
+              }
+            } else {
+              spec.url = trimTrailingSlash(spec.url)
+            }
+            return spec;
+          }
+
           return {
             info: function() {
               $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
@@ -179,30 +195,34 @@
             },
 
             // Replication and sync
-            replicateTo: function (remoteUrl) {
+            replicateTo: function (target) {
+              target = toReplicationSpec(target);
               return openReplication.then(function (replication) {
                 var request = {
                   source: cblite.urlNoCredentials + databaseName,
-                  target: (remoteUrl.slice(-1) === '/' ? remoteUrl : remoteUrl + '/') + databaseName
+                  target: target.url + databaseName,
+                  continuous: target.continuous
                 };
                 return replication.post(request).$promise;
               })
             },
 
-            replicateFrom: function (remoteUrl) {
+            replicateFrom: function (target) {
+              target = toReplicationSpec(target);
               return openReplication.then(function (replication) {
                 var request = {
-                  source: (remoteUrl.slice(-1) === '/' ? remoteUrl : remoteUrl + '/') + databaseName,
-                  target: cblite.urlNoCredentials + databaseName
+                  source: target.url + databaseName,
+                  target: cblite.urlNoCredentials + databaseName,
+                  continuous: target.continuous
                 };
                 return replication.post(request).$promise;
               })
             },
 
-            syncWith: function (remoteUrl) {
+            syncWith: function (target) {
               var that = this;
-              return that.replicateTo(remoteUrl).then(function (localToRemoteResponse) {
-                return that.replicateFrom(remoteUrl).then(function (remoteToLocalResponse) {
+              return that.replicateTo(target).then(function (localToRemoteResponse) {
+                return that.replicateFrom(target).then(function (remoteToLocalResponse) {
                   return {
                     localToRemote: localToRemoteResponse,
                     remoteToLocal: remoteToLocalResponse

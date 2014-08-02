@@ -282,10 +282,11 @@ describe('Angular Couchbase Lite', function () {
   });
 
   describe('one-off replication', function() {
-    xit("can be initiated from local -> remote", function () {
+    it("can be initiated from local -> remote", function () {
       var request = {
         source: replicationUrl + "/" + dbname,
-        target: syncUrl + "/" + dbname
+        target: syncUrl + "/" + dbname,
+        continuous: false
       };
       var response = {
         "session_id": "repl001",
@@ -296,15 +297,16 @@ describe('Angular Couchbase Lite', function () {
 
       runs(function () {
         return cblite.database(dbname).replicateTo(syncUrl).then(function (result) {
-            expect(result).toContainAll(response);
-          });
+          expect(result).toContainAll(response);
+        });
       })
     });
 
-    xit("can be initiated from remote -> local", function () {
+    it("can be initiated from remote -> local", function () {
       var request = {
         source: syncUrl + "/" + dbname,
-        target: replicationUrl + "/" + dbname
+        target: replicationUrl + "/" + dbname,
+        continuous: false
       };
       var response = {
         "session_id": "repl001",
@@ -320,12 +322,56 @@ describe('Angular Couchbase Lite', function () {
           });
       });
     });
+  });
 
-    describe('one-off sync', function () {
+  describe('continuous replication', function() {
+      it("can be initiated from local -> remote", function () {
+        var request = {
+          source: replicationUrl + "/" + dbname,
+          target: syncUrl + "/" + dbname,
+          continuous: true
+        };
+        var response = {
+          "session_id": "repl001",
+          "ok": true
+        };
+        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+          .respond(200, response);
+
+        runs(function () {
+          return cblite.database(dbname).replicateTo({url: syncUrl, continuous: true}).then(function (result) {
+            expect(result).toContainAll(response);
+          });
+        })
+      });
+
+      it("can be initiated from remote -> local", function () {
+        var request = {
+          source: syncUrl + "/" + dbname,
+          target: replicationUrl + "/" + dbname,
+          continuous: true
+        };
+        var response = {
+          "session_id": "repl001",
+          "ok": true
+        };
+        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+          .respond(200, response);
+
+        runs(function () {
+          return cblite.database(dbname).replicateFrom({url: syncUrl, continuous: true}).then(function (result) {
+            expect(result).toContainAll(response);
+          });
+        });
+      });
+    });
+
+  describe('one-off sync', function () {
       it("can be initiated", function () {
         var localToRemoteRequest = {
           source: replicationUrl + "/" + dbname,
-          target: syncUrl + "/" + dbname
+          target: syncUrl + "/" + dbname,
+          continuous: false
         };
         var localToRemoteResponse = {
           "session_id": "repl001",
@@ -333,7 +379,8 @@ describe('Angular Couchbase Lite', function () {
         };
         var remoteToLocalRequest = {
           source: syncUrl + "/" + dbname,
-          target: replicationUrl + "/" + dbname
+          target: replicationUrl + "/" + dbname,
+          continuous: false
         };
         var remoteToLocalResponse = {
           "session_id": "repl002",
@@ -353,5 +400,39 @@ describe('Angular Couchbase Lite', function () {
         });
       });
     });
-  });
+
+  describe('continuous sync', function () {
+      it("can be initiated", function () {
+        var localToRemoteRequest = {
+          source: replicationUrl + "/" + dbname,
+          target: syncUrl + "/" + dbname,
+          continuous: true
+        };
+        var localToRemoteResponse = {
+          "session_id": "repl001",
+          "ok": true
+        };
+        var remoteToLocalRequest = {
+          source: syncUrl + "/" + dbname,
+          target: replicationUrl + "/" + dbname,
+          continuous: true
+        };
+        var remoteToLocalResponse = {
+          "session_id": "repl002",
+          "ok": true
+        };
+        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", localToRemoteRequest, expectedHeaders)
+          .respond(200, localToRemoteResponse);
+        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", remoteToLocalRequest, expectedHeaders)
+          .respond(200, remoteToLocalResponse);
+
+        runs(function () {
+          return cblite.database(dbname).syncWith({url: syncUrl, continuous: true})
+            .then(function (result) {
+              expect(result.localToRemote).toContainAll(localToRemoteResponse);
+              expect(result.remoteToLocal).toContainAll(remoteToLocalResponse);
+            });
+        });
+      });
+    });
 });
