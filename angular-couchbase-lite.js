@@ -100,7 +100,7 @@
         // Databases
         database: function (databaseName) {
           var getDatabase = resource(':db', {db: databaseName});
-          var openReplication = resource(':db/_replicate', {db: databaseName});
+          var openReplication = resource('_replicate');
 
           function validateDocument(content) {
             var type = typeof (content);

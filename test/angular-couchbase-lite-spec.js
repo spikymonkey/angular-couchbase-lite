@@ -292,7 +292,7 @@ describe('Angular Couchbase Lite', function () {
         "session_id": "repl001",
         "ok": true
       };
-      $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
         .respond(200, response);
 
       runs(function () {
@@ -312,7 +312,7 @@ describe('Angular Couchbase Lite', function () {
         "session_id": "repl001",
         "ok": true
       };
-      $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
         .respond(200, response);
 
       runs(function () {
@@ -335,7 +335,7 @@ describe('Angular Couchbase Lite', function () {
           "session_id": "repl001",
           "ok": true
         };
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
           .respond(200, response);
 
         runs(function () {
@@ -355,7 +355,7 @@ describe('Angular Couchbase Lite', function () {
           "session_id": "repl001",
           "ok": true
         };
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", request, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
           .respond(200, response);
 
         runs(function () {
@@ -386,9 +386,9 @@ describe('Angular Couchbase Lite', function () {
           "session_id": "repl002",
           "ok": true
         };
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", localToRemoteRequest, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", localToRemoteRequest, expectedHeaders)
           .respond(200, localToRemoteResponse);
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", remoteToLocalRequest, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", remoteToLocalRequest, expectedHeaders)
           .respond(200, remoteToLocalResponse);
 
         runs(function () {
@@ -421,9 +421,9 @@ describe('Angular Couchbase Lite', function () {
           "session_id": "repl002",
           "ok": true
         };
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", localToRemoteRequest, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", localToRemoteRequest, expectedHeaders)
           .respond(200, localToRemoteResponse);
-        $httpBackend.expectPOST(restUrl + "/" + dbname + "/_replicate", remoteToLocalRequest, expectedHeaders)
+        $httpBackend.expectPOST(restUrl + "/_replicate", remoteToLocalRequest, expectedHeaders)
           .respond(200, remoteToLocalResponse);
 
         runs(function () {
