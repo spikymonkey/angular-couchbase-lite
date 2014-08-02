@@ -25,7 +25,9 @@ describe('Angular Couchbase Lite', function () {
       toContainAll: function (expected) {
         var property;
         for (property in expected) {
-          if (this.actual.hasOwnProperty(property) && this.actual[property] !== expected[property]) {
+          if (expected.hasOwnProperty(property) &&
+              this.actual.hasOwnProperty(property) &&
+              this.actual[property] !== expected[property]) {
             return false;
           }
         }
@@ -39,7 +41,7 @@ describe('Angular Couchbase Lite', function () {
   beforeEach(inject(function($injector, _cblite_) {
     $httpBackend = $injector.get('$httpBackend');
     cblite = _cblite_;
-    document.dispatchEvent(new Event('deviceready'));
+    document.dispatchEvent(new window.Event('deviceready'));
   }));
 
   afterEach(function() {

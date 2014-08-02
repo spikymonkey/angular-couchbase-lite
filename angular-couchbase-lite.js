@@ -151,8 +151,8 @@
               $log.debug("Asking Couchbase Lite if database [" + databaseName + "] exists");
               return getDatabase.then(function (db) {
                 return db.get({}, null).$promise.then(
-                  function (info) { return true; },
-                  function (error) { return false; }
+                  function () { return true; },
+                  function () { return false; }
                 );
               });
             },
