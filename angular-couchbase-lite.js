@@ -28,8 +28,9 @@
 
       document.addEventListener('deviceready', deviceReady, false);
 
-      var cordova = $q.defer(), cbliteUrl = $q.defer();
-      var cbliteUrlPromise = cordova.promise.then(function() { return cbliteUrl.promise; });
+      var deferredCordova = $q.defer(), deferredCBLiteUrl = $q.defer();
+      var cbliteUrlPromise = deferredCordova.promise.then(function() { return deferredCBLiteUrl.promise; });
+      var cblite;
 
       function deviceReady() {
 
@@ -50,10 +51,11 @@
           if (window.cblite) {
             window.cblite.getURL(function (err, url) {
               if (err) {
-                cbliteUrl.reject(err);
+                deferredCBLiteUrl.reject(err);
               } else {
-                cbliteUrl.notify("Couchbase Lite is running at " + url);
-                cbliteUrl.resolve(new ParsedUrl(url));
+                deferredCBLiteUrl.notify("Couchbase Lite is running at " + url);
+                cblite = new ParsedUrl(url)
+                deferredCBLiteUrl.resolve(cblite);
               }
             });
           } else {
@@ -61,8 +63,8 @@
           }
         }
 
-        cordova.notify("Notified that Cordova is ready");
-        cordova.resolve();
+        deferredCordova.notify("Notified that Cordova is ready");
+        deferredCordova.resolve();
         getUrl();
       }
 
@@ -98,6 +100,28 @@
         // Databases
         database: function (databaseName) {
           var getDatabase = resource(':db', {db: databaseName});
+          var openReplication = resource(':db/_replicate', {db: databaseName});
+
+          function validateDocument(content) {
+            var type = typeof (content);
+            switch (type) {
+              case "string":
+                if (typeof JSON.parse(content) !== "object") {
+                  throw "You can only save valid JSON strings"
+                }
+                break;
+
+              case "object":
+                if (content === null) {
+                  throw "You can't save a null document"
+                }
+                break;
+
+              default:
+                throw "You can't save this type: " + type;
+                break;
+            }
+          }
 
           return {
             info: function() {
@@ -128,22 +152,7 @@
             document: function (id) {
               return {
                 save: function (content) {
-                  var type = typeof (content);
-                  switch (type) {
-                    case "undefined":
-                    case "number":
-                    case "boolean":
-                    case "function":
-                    case "symbol":
-                      throw "You can't save this type: " + type;
-                      break;
-
-                    case "object":
-                      if (content === null) {
-                        throw "You can't save a null document"
-                      }
-                      break;
-                  }
+                  validateDocument(content);
 
                   if (!angular.isDefined(id)) {
                     // If no id has been provided, then see if we can pull one from the document
@@ -151,7 +160,12 @@
                     if (id === null || !angular.isDefined(id)) {
                       $log.debug("Asking Couchbase Lite to save document with a database-generated id in database [" + databaseName + "]");
                       return resource(':db', {db: databaseName}).then(function (database) {
-                        return database.post(content).$promise;
+                        var promise = database.post(content).$promise;
+                        return promise.then(function (response) {
+                          // Update our cached id with the one returned in the response
+                          id = response.id;
+                          return promise;
+                        })
                       });
                     }
                   }
