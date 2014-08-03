@@ -172,6 +172,14 @@
               });
             },
 
+            changes: function (spec) {
+              $log.debug("Asking Couchbase Lite for list of changes to database [" + databaseName + "]");
+              spec = angular.extend({}, spec, {db: databaseName});
+              return openResource(':db/_changes', spec).then(function (db) {
+                return db.get().$promise;
+              })
+            },
+
             // Documents
             document: function (id) {
               return {

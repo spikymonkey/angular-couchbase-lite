@@ -23,14 +23,7 @@ describe('Angular Couchbase Lite', function () {
     this.addMatchers({
       toCauseTestFailure: function () { console.log('hit'); return false; },
       toContainAll: function (expected) {
-        var property;
-        for (property in expected) {
-          if (expected.hasOwnProperty(property) &&
-              this.actual[property] !== expected[property]) {
-            return false;
-          }
-        }
-        return true;
+        return angular.equals(expected, this.actual);
       }
     });
   });
@@ -89,9 +82,8 @@ describe('Angular Couchbase Lite', function () {
     });
   });
 
-  describe('databases', function() {
-
-    it('can be queried for information', function() {
+  describe('databases', function () {
+    it('can be queried for information', function () {
       var response = {
         "instance_start_time" : 1386620242527997,
         "committed_update_seq" : 25800,
@@ -115,7 +107,7 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it("can't be queried for information if they don't exist", function() {
+    it("can't be queried for information if they don't exist", function () {
       var response = {
         "status" : 404,
         "error" : "not_found"
@@ -132,7 +124,7 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it('that exist can be tested for existence', function() {
+    it('that exist can be tested for existence', function () {
       var response = {
         "instance_start_time" : 1386620242527997,
         "committed_update_seq" : 25800,
@@ -156,7 +148,7 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it("that don't exist can be tested for existence", function() {
+    it("that don't exist can be tested for existence", function () {
       var response = {
         "status" : 404,
         "error" : "not_found"
@@ -173,7 +165,7 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it('can be created', function() {
+    it('can be created', function () {
       var response = {ok: true};
       $httpBackend.expectPUT(restUrl + "/" + dbname, null, expectedHeaders)
         .respond(200, response);
@@ -187,7 +179,7 @@ describe('Angular Couchbase Lite', function () {
 
     });
 
-    it("can't be created again", function() {
+    it("can't be created again", function () {
       var response = {
         "status" : 412,
         "error" : "file_exists"
@@ -205,7 +197,43 @@ describe('Angular Couchbase Lite', function () {
             expect(error.data).toContainAll(response);
           });
       })
-    })
+    });
+
+    it("can be queried for changes", function () {
+      var response = {
+        "results" : [
+          {
+            "seq" : 1,
+            "id" : "A329CFEC-29E8-4DCF-BB49-EFCE8CD6B212",
+            "changes" : [
+              {
+                "rev" : "1-afbf905396a144446feb2431c37065f9"
+              }
+            ]
+          },
+          {
+            "seq" : 2,
+            "id" : "209BB170-C1E0-473E-B3C4-A4533ACA3CDD",
+            "changes" : [
+              {
+                "rev" : "1-ed0ebedd2fab89227b352f6455a08010"
+              }
+            ]
+          }
+        ],
+        "last_seq" : 2
+      };
+
+      $httpBackend.expectGET(restUrl + "/" + dbname + "/_changes?feed=continuous&limit=7", expectedHeaders)
+        .respond(200, response);
+
+      runs(function() {
+        return cblite.database(dbname).changes({feed: 'continuous', limit: 7}).then(
+          function (result) {
+            expect(result).toContainAll(response);
+          });
+      });
+    });
   });
 
   describe('documents', function() {
@@ -307,7 +335,7 @@ describe('Angular Couchbase Lite', function () {
     });
   });
 
-  describe('one-off replication', function() {
+  describe('one-off replication', function () {
     it("can be initiated from local -> remote", function () {
       var request = {
         source: dbname,
@@ -397,7 +425,7 @@ describe('Angular Couchbase Lite', function () {
     });
   });
 
-  describe('continuous replication', function() {
+  describe('continuous replication', function () {
       it("can be initiated from local -> remote", function () {
         var request = {
           source: dbname,
