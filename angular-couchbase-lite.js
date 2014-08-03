@@ -105,6 +105,13 @@
           });
         },
 
+        allDatabases: function () {
+          $log.debug("Asking Couchbase Lite for list of all databases");
+          return openResource('_all_dbs').then(function (databases) {
+            return databases.list().$promise;
+          })
+        },
+
         // Databases
         database: function (databaseName) {
           var openDatabase = openResource(':db', {db: databaseName});
