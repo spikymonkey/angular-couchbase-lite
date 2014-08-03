@@ -60,12 +60,33 @@ describe('Angular Couchbase Lite', function () {
         .respond(200, response);
 
       runs(function() {
-        return cblite.info()
-          .then(function(info) {
+        return cblite.info().then(function(info) {
             expect(info).toContainAll(response);
           });
       });
-    })
+    });
+
+    it('can be queried for active tasks', function () {
+      var response = [{
+        "progress": 0,
+        "target":   syncUrl + "/" + dbname,
+        "source":   dbname,
+        "type":     "Replication",
+        "status":   "Processed 0 / 0 changes",
+        "task":     "repl001"
+      }];
+
+      $httpBackend.expectGET(restUrl + "/_active_tasks", expectedHeaders)
+        .respond(200, response);
+
+      runs(function() {
+        return cblite.activeTasks()
+          .then(function(tasks) {
+            expect(tasks.length).toBe(1);
+            expect(tasks[0]).toContainAll(response[0]);
+          });
+      });
+    });
   });
 
   describe('databases', function() {
@@ -452,7 +473,30 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it("failures are reported", function () {
+    it("local -> remote leg failures are reported", function () {
+      var localToRemoteRequest = {
+        source: dbname,
+        target: syncUrl + "/" + dbname,
+        continuous: false
+      };
+      var localToRemoteResponse = {
+        "session_id": "repl001"
+      };
+      $httpBackend.expectPOST(restUrl + "/_replicate", localToRemoteRequest, expectedHeaders)
+        .respond(401, localToRemoteResponse);
+
+      runs(function () {
+        return cblite.database(dbname).syncWith(syncUrl).then(
+          function (unexpectedSuccess) {
+            expect(unexpectedSuccess).toCauseTestFailure();
+          },
+          function (error) {
+            expect(error.localToRemote.data).toContainAll(localToRemoteResponse);
+          });
+      });
+    });
+
+    it("remote -> local replication leg failures are reported", function () {
       var localToRemoteRequest = {
         source: dbname,
         target: syncUrl + "/" + dbname,
@@ -468,7 +512,7 @@ describe('Angular Couchbase Lite', function () {
         continuous: false
       };
       var remoteToLocalResponse = {
-        "ok": false
+        "session_id": "repl002"
       };
       $httpBackend.expectPOST(restUrl + "/_replicate", localToRemoteRequest, expectedHeaders)
         .respond(200, localToRemoteResponse);

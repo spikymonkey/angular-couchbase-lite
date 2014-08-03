@@ -69,12 +69,13 @@
         getUrl();
       }
 
-      function resource(path, paramDefaults) {
+      function openResource(path, paramDefaults) {
         return cbliteUrlPromise.then(
           function (parsedUrl) {
             var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
             var actions = {
               'get':  {method: 'GET',  headers: headers},
+              'list': {method: 'GET', headers: headers, isArray: true},
               'put':  {method: 'PUT',  headers: headers},
               'post': {method: 'POST', headers: headers}
             };
@@ -92,15 +93,22 @@
         // Couchbase Lite Server
         info: function () {
           $log.debug("Asking for Couchbase Lite server info");
-          return resource('').then(function (server) {
+          return openResource('').then(function (server) {
             return server.get().$promise;
+          });
+        },
+
+        activeTasks: function () {
+          $log.debug("Asking for Couchbase Lite server active tasks");
+          return openResource('_active_tasks').then(function (server) {
+            return server.list().$promise;
           });
         },
 
         // Databases
         database: function (databaseName) {
-          var openDatabase = resource(':db', {db: databaseName});
-          var openReplication = resource('_replicate');
+          var openDatabase = openResource(':db', {db: databaseName});
+          var openReplication = openResource('_replicate');
 
           function validateDocument(content) {
             var type = typeof (content);
@@ -175,7 +183,7 @@
                     id = content._id;
                     if (id === null || !angular.isDefined(id)) {
                       $log.debug("Asking Couchbase Lite to save document with a database-generated id in database [" + databaseName + "]");
-                      return resource(':db', {db: databaseName}).then(function (database) {
+                      return openResource(':db', {db: databaseName}).then(function (database) {
                         var promise = database.post(content).$promise;
                         return promise.then(function (response) {
                           // Update our cached id with the one returned in the response
@@ -187,7 +195,7 @@
                   }
 
                   $log.debug("Asking Couchbase Lite to save document with id [" + id + "] in database [" + databaseName + "]");
-                  return resource(':db/:doc', {db: databaseName, doc: id}).then(function (document) {
+                  return openResource(':db/:doc', {db: databaseName, doc: id}).then(function (document) {
                     return document.put(content).$promise;
                   });
                 }
@@ -241,7 +249,7 @@
                 },
                 function (localToRemoteError) {
                   combinedResponse.localToRemote = localToRemoteError;
-                  sync.resolve(combinedResponse);
+                  sync.reject(combinedResponse);
                 }
               );
 
