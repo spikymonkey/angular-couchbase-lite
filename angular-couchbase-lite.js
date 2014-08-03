@@ -24,7 +24,7 @@
 
 (function () {
   angular.module('cblite', ['ngResource', 'ab-base64'])
-    .factory('cblite', function cbliteFactory($resource, $log, $q, base64) {
+    .factory('cblite', function cbliteFactory($resource, $log, $q, base64, $filter) {
 
       document.addEventListener('deviceready', deviceReady, false);
 
@@ -110,6 +110,13 @@
           return openResource('_all_dbs').then(function (databases) {
             return databases.list().$promise;
           })
+        },
+
+        userDatabases: function () {
+          $log.debug("Asking Couchbase Lite for list of user databases");
+          return this.allDatabases().then(function (databases) {
+            return $filter('filter')(databases, function (db) { return db.slice(0, 1) !== '_'; });
+          });
         },
 
         // Databases

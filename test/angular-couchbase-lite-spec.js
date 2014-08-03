@@ -81,7 +81,7 @@ describe('Angular Couchbase Lite', function () {
       });
     });
 
-    it('can be queried for databases', function () {
+    it('can be queried for all databases', function () {
       var response = ["_replicator", "dbA", "dbB", "dbC"];
 
       $httpBackend.expectGET(restUrl + "/_all_dbs", expectedHeaders).respond(200, response);
@@ -90,6 +90,19 @@ describe('Angular Couchbase Lite', function () {
         return cblite.allDatabases()
           .then(function(databases) {
             expect(angular.equals(databases, response)).toBe(true);
+          });
+      });
+    });
+
+    it('can be queried for user databases', function () {
+      var response = ["_replicator", "dbA", "dbB", "dbC"];
+
+      $httpBackend.expectGET(restUrl + "/_all_dbs", expectedHeaders).respond(200, response);
+
+      runs(function() {
+        return cblite.userDatabases()
+          .then(function(databases) {
+            expect(angular.equals(databases, ["dbA", "dbB", "dbC"])).toBe(true);
           });
       });
     });
