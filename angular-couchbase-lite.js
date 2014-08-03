@@ -99,7 +99,7 @@
 
         // Databases
         database: function (databaseName) {
-          var getDatabase = resource(':db', {db: databaseName});
+          var openDatabase = resource(':db', {db: databaseName});
           var openReplication = resource('_replicate');
 
           function validateDocument(content) {
@@ -142,14 +142,14 @@
           return {
             info: function() {
               $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
-              return getDatabase.then(function (db) {
+              return openDatabase.then(function (db) {
                 return db.get({}, null).$promise;
               });
             },
 
             exists: function () {
               $log.debug("Asking Couchbase Lite if database [" + databaseName + "] exists");
-              return getDatabase.then(function (db) {
+              return openDatabase.then(function (db) {
                 return db.get({}, null).$promise.then(
                   function () { return true; },
                   function () { return false; }
@@ -159,7 +159,7 @@
 
             create: function () {
               $log.debug("Asking Couchbase Lite to create database [" + databaseName + "]");
-              return getDatabase.then(function (db) {
+              return openDatabase.then(function (db) {
                 return db.put({}, null).$promise;
               });
             },
@@ -195,40 +195,57 @@
             },
 
             // Replication and sync
-            replicateTo: function (target) {
-              target = toReplicationSpec(target);
+            replicateTo: function (spec) {
+              spec = toReplicationSpec(spec);
               return openReplication.then(function (replication) {
                 var request = {
-                  source: cblite.urlNoCredentials + databaseName,
-                  target: target.url + databaseName,
-                  continuous: target.continuous
+                  source: databaseName,
+                  target: spec.url + databaseName,
+                  continuous: spec.continuous
                 };
                 return replication.post(request).$promise;
               })
             },
 
-            replicateFrom: function (target) {
-              target = toReplicationSpec(target);
+            replicateFrom: function (spec) {
+              spec = toReplicationSpec(spec);
               return openReplication.then(function (replication) {
                 var request = {
-                  source: target.url + databaseName,
-                  target: cblite.urlNoCredentials + databaseName,
-                  continuous: target.continuous
+                  source: spec.url + databaseName,
+                  target: databaseName,
+                  continuous: spec.continuous
                 };
                 return replication.post(request).$promise;
               })
             },
 
-            syncWith: function (target) {
+            syncWith: function (spec) {
               var that = this;
-              return that.replicateTo(target).then(function (localToRemoteResponse) {
-                return that.replicateFrom(target).then(function (remoteToLocalResponse) {
-                  return {
-                    localToRemote: localToRemoteResponse,
-                    remoteToLocal: remoteToLocalResponse
-                  }
-                });
-              });
+              var sync = $q.defer();
+              var combinedResponse = {};
+
+              that.replicateTo(spec).then(
+                function (localToRemoteResponse) {
+                  combinedResponse.localToRemote = localToRemoteResponse;
+
+                  return that.replicateFrom(spec).then(
+                    function (remoteToLocalResponse) {
+                      combinedResponse.remoteToLocal = remoteToLocalResponse;
+                      sync.resolve(combinedResponse);
+                    },
+                    function (remoteToLocalError) {
+                      combinedResponse.remoteToLocal = remoteToLocalError;
+                      sync.reject(combinedResponse);
+                    }
+                  );
+                },
+                function (localToRemoteError) {
+                  combinedResponse.localToRemote = localToRemoteError;
+                  sync.resolve(combinedResponse);
+                }
+              );
+
+              return sync.promise;
             }
           };
         }
