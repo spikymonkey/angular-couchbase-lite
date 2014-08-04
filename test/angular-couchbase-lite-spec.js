@@ -89,20 +89,37 @@ describe('Angular Couchbase Lite', function () {
       runs(function() {
         return cblite.allDatabases()
           .then(function(databases) {
-            expect(angular.equals(databases, response)).toBe(true);
+            var responseIndex = 0;
+
+            expect(databases.length).toEqual(response.length);
+
+            for (var i = 0; i < databases.length; i++) {
+              var database = databases[i];
+              expect(database.name).toBeDefined();
+              expect(database.name()).toEqual(response[responseIndex++]);
+            }
           });
       });
     });
 
     it('can be queried for user databases', function () {
       var response = ["_replicator", "dbA", "dbB", "dbC"];
+      var userDatabaseNames = response.slice(1);
 
       $httpBackend.expectGET(restUrl + "/_all_dbs", expectedHeaders).respond(200, response);
 
       runs(function() {
         return cblite.userDatabases()
           .then(function(databases) {
-            expect(angular.equals(databases, ["dbA", "dbB", "dbC"])).toBe(true);
+            var userDatabaseIndex = 0;
+
+            expect(databases.length).toEqual(userDatabaseNames.length);
+
+            for (var i = 0; i < databases.length; i++) {
+              var database = databases[i];
+              expect(database.name).toBeDefined();
+              expect(database.name()).toEqual(userDatabaseNames[userDatabaseIndex++]);
+            }
           });
       });
     });

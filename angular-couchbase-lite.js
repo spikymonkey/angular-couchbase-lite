@@ -106,9 +106,14 @@
         },
 
         allDatabases: function () {
+          var that = this;
           $log.debug("Asking Couchbase Lite for list of all databases");
-          return openResource('_all_dbs').then(function (databases) {
-            return databases.list().$promise;
+          return openResource('_all_dbs').then(function (allDatabases) {
+            return allDatabases.list().$promise.then(function (databaseNames) {
+              return databaseNames.map(function (name) {
+                return that.database(name);
+              })
+            });
           })
         },
 
@@ -162,7 +167,9 @@
           }
 
           return {
-            info: function() {
+            name: function () { return databaseName; },
+
+            info: function () {
               $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
               return openDatabase.then(function (db) {
                 return db.get({}, null).$promise;
