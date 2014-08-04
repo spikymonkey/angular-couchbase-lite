@@ -262,7 +262,26 @@ describe('Angular Couchbase Lite', function () {
     });
   });
 
-  describe('documents', function() {
+  describe('documents', function () {
+    it('can be fetched', function () {
+      var documentId = "document";
+      var queryParams = {attachments: true, conflicts: true};
+      var response = {
+        "_id" : documentId,
+        "_rev" : "1-4101356e9c47d15d4f8f7390d05dbbcf",
+        foo: "bar"
+      };
+      $httpBackend.expectGET(restUrl + "/" + dbname + "/" + documentId + "?attachments=true&conflicts=true", expectedHeaders)
+        .respond(200, response);
+
+      runs(function() {
+        return cblite.database(dbname).document(documentId).fetch(queryParams)
+          .then(function(result) {
+            expect(result).toContainAll(response);
+          });
+      });
+    });
+
     it('can not be saved with invalid content', function() {
       expect(cblite.database(dbname).document('document').save.bind(null))
         .toThrow("You can't save this type: undefined");

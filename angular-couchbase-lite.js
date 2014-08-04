@@ -197,6 +197,14 @@
             // Documents
             document: function (id) {
               return {
+                fetch: function (spec) {
+                  spec = angular.extend({}, spec, {db: databaseName, doc: id});
+                  $log.debug("Asking Couchbase Lite for document with id [" + id + "] in database [" + databaseName + "]");
+                  return openResource(':db/:doc', spec).then(function (document) {
+                    return document.get().$promise;
+                  });
+                },
+
                 save: function (content) {
                   validateDocument(content);
 
