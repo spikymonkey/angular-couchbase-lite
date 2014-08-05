@@ -23,27 +23,27 @@
  */
 
 (function () {
+  'use strict';
   angular.module('cblite', ['ngResource', 'ab-base64'])
     .factory('cblite', function cbliteFactory($resource, $log, $q, base64, $filter) {
 
-      document.addEventListener('deviceready', deviceReady, false);
-
-      var deferredCordova = $q.defer(), deferredCBLiteUrl = $q.defer();
-      var cbliteUrlPromise = deferredCordova.promise.then(function() { return deferredCBLiteUrl.promise; });
-      var cblite;
+      var deferredCordova = $q.defer(),
+        deferredCBLiteUrl = $q.defer(),
+        cbliteUrlPromise = deferredCordova.promise.then(function () { return deferredCBLiteUrl.promise; }),
+        cblite;
 
       function deviceReady() {
         function ParsedUrl(url) {
           // Trim off the leading 'http://'
-          var http = "http://";
-          var credentials = url.slice(http.length, url.indexOf('@')),
+          var http = "http://",
+            credentials = url.slice(http.length, url.indexOf('@')),
             basicAuthToken = base64.encode(credentials);
 
           return {
             credentials: credentials,
             basicAuthToken: basicAuthToken,
             url: url,
-            urlNoCredentials: http + url.slice(http.length +credentials.length + 1) // '@' symbol
+            urlNoCredentials: http + url.slice(http.length + credentials.length + 1) // '@' symbol
           };
         }
 
@@ -72,34 +72,37 @@
       function openResource(path, paramDefaults) {
         return cbliteUrlPromise.then(
           function (parsedUrl) {
-            var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
-            var actions = {
-              'get':  {method: 'GET',  headers: headers},
-              'list': {method: 'GET', headers: headers, isArray: true},
-              'put':  {method: 'PUT',  headers: headers},
-              'post': {method: 'POST', headers: headers}
-            };
+            var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken},
+              actions = {
+                'get':  {method: 'GET',  headers: headers},
+                'list': {method: 'GET', headers: headers, isArray: true},
+                'put':  {method: 'PUT',  headers: headers},
+                'post': {method: 'POST', headers: headers}
+              };
 
             return $resource(parsedUrl.url + path, paramDefaults, actions);
           },
           null,
-          function(notification) {
+          function (notification) {
             var message = "Angular Couchbase Lite: " + notification;
             $log.debug(message);
-          });
+          }
+        );
       }
+
+      document.addEventListener('deviceready', deviceReady, false);
 
       return {
         // Couchbase Lite Server
         info: function () {
-          $log.debug("Asking for Couchbase Lite server info");
+          $log.debug("Asking Couchbase Lite for server info");
           return openResource('').then(function (server) {
             return server.get().$promise;
           });
         },
 
         activeTasks: function () {
-          $log.debug("Asking for Couchbase Lite server active tasks");
+          $log.debug("Asking Couchbase Lite for a list of active tasks");
           return openResource('_active_tasks').then(function (server) {
             return server.list().$promise;
           });
@@ -112,9 +115,9 @@
             return allDatabases.list().$promise.then(function (databaseNames) {
               return databaseNames.map(function (name) {
                 return that.database(name);
-              })
+              });
             });
-          })
+          });
         },
 
         userDatabases: function () {
@@ -126,42 +129,41 @@
 
         // Databases
         database: function (databaseName) {
-          var openDatabase = openResource(':db', {db: databaseName});
-          var openReplication = openResource('_replicate');
+          var openDatabase = openResource(':db', {db: databaseName}),
+            openReplication = openResource('_replicate');
 
           function validateDocument(content) {
             var type = typeof (content);
             switch (type) {
-              case "string":
-                if (typeof JSON.parse(content) !== "object") {
-                  throw "You can only save valid JSON strings"
-                }
-                break;
+            case "string":
+              if (typeof JSON.parse(content) !== "object") {
+                throw "You can only save valid JSON strings";
+              }
+              break;
 
-              case "object":
-                if (content === null) {
-                  throw "You can't save a null document"
-                }
-                break;
+            case "object":
+              if (content === null) {
+                throw "You can't save a null document";
+              }
+              break;
 
-              default:
-                throw "You can't save this type: " + type;
-                break;
+            default:
+              throw "You can't save this type: " + type;
             }
           }
 
           function toReplicationSpec(spec) {
             function trimTrailingSlash(url) {
-              return (url.slice(-1) === '/' ? url : url + '/')
+              return (url.slice(-1) === '/' ? url : url + '/');
             }
 
             if (typeof spec === 'string') {
               spec = {
                 url: trimTrailingSlash(spec),
                 continuous: false
-              }
+              };
             } else {
-              spec.url = trimTrailingSlash(spec.url)
+              spec.url = trimTrailingSlash(spec.url);
             }
             return spec;
           }
@@ -172,18 +174,16 @@
             info: function () {
               $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
               return openDatabase.then(function (db) {
-                return db.get({}, null).$promise;
+                return db.get().$promise;
               });
             },
 
             exists: function () {
               $log.debug("Asking Couchbase Lite if database [" + databaseName + "] exists");
-              return openDatabase.then(function (db) {
-                return db.get({}, null).$promise.then(
-                  function () { return true; },
-                  function () { return false; }
-                );
-              });
+              return this.info().then(
+                function () { return true; },
+                function () { return false; }
+              );
             },
 
             create: function () {
@@ -198,7 +198,7 @@
               spec = angular.extend({}, spec, {db: databaseName});
               return openResource(':db/_changes', spec).then(function (db) {
                 return db.get().$promise;
-              })
+              });
             },
 
             // Documents
@@ -226,7 +226,7 @@
                           // Update our cached id with the one returned in the response
                           id = response.id;
                           return promise;
-                        })
+                        });
                       });
                     }
                   }
@@ -249,7 +249,7 @@
                   continuous: spec.continuous
                 };
                 return replication.post(request).$promise;
-              })
+              });
             },
 
             replicateFrom: function (spec) {
@@ -261,13 +261,13 @@
                   continuous: spec.continuous
                 };
                 return replication.post(request).$promise;
-              })
+              });
             },
 
             syncWith: function (spec) {
-              var that = this;
-              var sync = $q.defer();
-              var combinedResponse = {};
+              var that = this,
+                sync = $q.defer(),
+                combinedResponse = {};
 
               that.replicateTo(spec).then(
                 function (localToRemoteResponse) {
