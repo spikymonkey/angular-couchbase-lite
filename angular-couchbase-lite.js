@@ -204,7 +204,7 @@
             // Documents
             document: function (id) {
               return {
-                fetch: function (spec) {
+                load: function (spec) {
                   spec = angular.extend({}, spec, {db: databaseName, doc: id});
                   $log.debug("Asking Couchbase Lite for document with id [" + id + "] in database [" + databaseName + "]");
                   return openResource(':db/:doc', spec).then(function (document) {

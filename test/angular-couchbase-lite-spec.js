@@ -292,7 +292,7 @@ describe('Angular Couchbase Lite', function () {
         .respond(200, response);
 
       runs(function() {
-        return cblite.database(dbname).document(documentId).fetch(queryParams)
+        return cblite.database(dbname).document(documentId).load(queryParams)
           .then(function(result) {
             expect(result).toContainAll(response);
           });
