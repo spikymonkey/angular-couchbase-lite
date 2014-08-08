@@ -4,7 +4,7 @@ describe('Angular Couchbase Lite', function () {
   var url = "my.couchbase.lite";
   var cbliteUrl = "http://username:password@" + url + "/";
   var restUrl = "http://username@" + url;
-  var syncUrl = "http://my.sync.gateway";
+  var syncUrl = "http://my.sync.gateway/sync-db";
   var dbname = "my-database";
   var cblite;
 
@@ -401,7 +401,7 @@ describe('Angular Couchbase Lite', function () {
     it("can be initiated from local -> remote", function () {
       var request = {
         source: dbname,
-        target: syncUrl + "/" + dbname,
+        target: syncUrl,
         continuous: false
       };
       var response = {
@@ -421,7 +421,7 @@ describe('Angular Couchbase Lite', function () {
     it("local -> remote failures are reported", function () {
       var request = {
         source: dbname,
-        target: syncUrl + "/" + dbname,
+        target: syncUrl,
         continuous: false
       };
       var response = {
@@ -444,7 +444,7 @@ describe('Angular Couchbase Lite', function () {
 
     it("can be initiated from remote -> local", function () {
       var request = {
-        source: syncUrl + "/" + dbname,
+        source: syncUrl,
         target: dbname,
         continuous: false
       };
@@ -465,7 +465,7 @@ describe('Angular Couchbase Lite', function () {
 
     it("remote -> local failures are reported", function () {
       var request = {
-        source: syncUrl + "/" + dbname,
+        source: syncUrl,
         target: dbname,
         continuous: false
       };
@@ -491,7 +491,7 @@ describe('Angular Couchbase Lite', function () {
       it("can be initiated from local -> remote", function () {
         var request = {
           source: dbname,
-          target: syncUrl + "/" + dbname,
+          target: syncUrl,
           continuous: true
         };
         var response = {
@@ -510,7 +510,7 @@ describe('Angular Couchbase Lite', function () {
 
       it("can be initiated from remote -> local", function () {
         var request = {
-          source: syncUrl + "/" + dbname,
+          source: syncUrl,
           target: dbname,
           continuous: true
         };
@@ -533,7 +533,7 @@ describe('Angular Couchbase Lite', function () {
     it("can be initiated", function () {
       var localToRemoteRequest = {
         source: dbname,
-        target: syncUrl + "/" + dbname,
+        target: syncUrl,
         continuous: false
       };
       var localToRemoteResponse = {
@@ -541,7 +541,7 @@ describe('Angular Couchbase Lite', function () {
         "ok": true
       };
       var remoteToLocalRequest = {
-        source: syncUrl + "/" + dbname,
+        source: syncUrl,
         target: dbname,
         continuous: false
       };
@@ -566,7 +566,7 @@ describe('Angular Couchbase Lite', function () {
     it("local -> remote leg failures are reported", function () {
       var localToRemoteRequest = {
         source: dbname,
-        target: syncUrl + "/" + dbname,
+        target: syncUrl,
         continuous: false
       };
       var localToRemoteResponse = {
@@ -589,7 +589,7 @@ describe('Angular Couchbase Lite', function () {
     it("remote -> local replication leg failures are reported", function () {
       var localToRemoteRequest = {
         source: dbname,
-        target: syncUrl + "/" + dbname,
+        target: syncUrl,
         continuous: false
       };
       var localToRemoteResponse = {
@@ -597,7 +597,7 @@ describe('Angular Couchbase Lite', function () {
         "ok": true
       };
       var remoteToLocalRequest = {
-        source: syncUrl + "/" + dbname,
+        source: syncUrl,
         target: dbname,
         continuous: false
       };
@@ -626,7 +626,7 @@ describe('Angular Couchbase Lite', function () {
       it("can be initiated", function () {
         var localToRemoteRequest = {
           source: dbname,
-          target: syncUrl + "/" + dbname,
+          target: syncUrl,
           continuous: true
         };
         var localToRemoteResponse = {
@@ -634,7 +634,7 @@ describe('Angular Couchbase Lite', function () {
           "ok": true
         };
         var remoteToLocalRequest = {
-          source: syncUrl + "/" + dbname,
+          source: syncUrl,
           target: dbname,
           continuous: true
         };

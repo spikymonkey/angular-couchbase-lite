@@ -153,17 +153,11 @@
           }
 
           function toReplicationSpec(spec) {
-            function trimTrailingSlash(url) {
-              return (url.slice(-1) === '/' ? url : url + '/');
-            }
-
             if (typeof spec === 'string') {
               spec = {
-                url: trimTrailingSlash(spec),
+                url: spec,
                 continuous: false
               };
-            } else {
-              spec.url = trimTrailingSlash(spec.url);
             }
             return spec;
           }
@@ -245,7 +239,7 @@
               return openReplication.then(function (replication) {
                 var request = {
                   source: databaseName,
-                  target: spec.url + databaseName,
+                  target: spec.url,
                   continuous: spec.continuous
                 };
                 return replication.post(request).$promise;
@@ -256,7 +250,7 @@
               spec = toReplicationSpec(spec);
               return openReplication.then(function (replication) {
                 var request = {
-                  source: spec.url + databaseName,
+                  source: spec.url,
                   target: databaseName,
                   continuous: spec.continuous
                 };
