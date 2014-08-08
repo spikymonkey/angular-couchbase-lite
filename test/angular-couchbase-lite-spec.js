@@ -242,6 +242,46 @@ describe('Angular Couchbase Lite', function () {
       })
     });
 
+    it("can be lazily created/fetched when they already exist", function () {
+      var existenceResponse = {
+        "instance_start_time" : 1386620242527997,
+        "committed_update_seq" : 25800,
+        "disk_size" : 15360000,
+        "purge_seq" : 0,
+        "db_uuid" : "65FB16DF-FFD7-4514-9E8D-B734B066D28D",
+        "doc_count" : 5048,
+        "db_name" : dbname,
+        "update_seq" : 25800,
+        "disk_format_version" : 11
+      };
+      $httpBackend.expectGET(restUrl + "/" + dbname, expectedHeaders).respond(200, existenceResponse);
+
+      runs(function() {
+        return cblite.database(dbname).createIfMissing()
+          .then(function(result) {
+            expect(result).toContainAll(existenceResponse);
+          });
+      });
+    });
+
+    iit("can be lazily created/fetched when they don't already exist", function () {
+      var existenceResponse = {
+        "status" : 404,
+        "error" : "not_found"
+      };
+      var creationResponse = {ok: true};
+
+      $httpBackend.expectGET(restUrl + "/" + dbname, expectedHeaders).respond(404, existenceResponse);
+      $httpBackend.expectPUT(restUrl + "/" + dbname, null, expectedHeaders).respond(200, creationResponse);
+
+      runs(function() {
+        return cblite.database(dbname).createIfMissing()
+          .then(function(result) {
+            expect(result).toContainAll(creationResponse);
+          });
+      });
+    });
+
     it("can be queried for changes", function () {
       var response = {
         "results" : [

@@ -187,6 +187,17 @@
               });
             },
 
+            createIfMissing: function () {
+              var that = this;
+              return this.info().then(
+                function (info) { return info; },
+                function (error) {
+                  if (error.status === 404) return that.create();
+                  throw "Unable to create database: " + error;
+                }
+              )
+            },
+
             changes: function (spec) {
               $log.debug("Asking Couchbase Lite for list of changes to database [" + databaseName + "]");
               spec = angular.extend({}, spec, {db: databaseName});
