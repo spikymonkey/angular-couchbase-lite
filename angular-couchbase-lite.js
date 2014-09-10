@@ -244,6 +244,24 @@
               };
             },
 
+            // Local documents
+            localDocument: function (id) {
+              var that = this;
+
+              if (id.slice(0, 7) !== '_local/') throw "Invalid local document identifier '" + id + "'";
+
+              return {
+                load: function (spec) {
+                  return that.document(id).load(spec);
+                },
+
+                save: function (content) {
+                  if (!angular.isDefined(id)) throw 'Local document id must be specified';
+                  return that.document(id).save(content);
+                }
+              }
+            },
+
             // Replication and sync
             replicateTo: function (spec) {
               spec = toReplicationSpec(spec);
