@@ -451,9 +451,9 @@ describe('Angular Couchbase Lite', function () {
 
       runs(function() {
         return cblite.database(dbname).localDocument(documentId).load(queryParams)
-            .then(function(result) {
-              expect(result).toContainAll(response);
-            });
+          .then(function(result) {
+            expect(result).toContainAll(response);
+          });
       });
     });
 

@@ -27,7 +27,8 @@
   angular.module('cblite', ['ngResource', 'ab-base64'])
     .factory('cblite', function cbliteFactory($resource, $log, $q, base64, $filter) {
 
-      var deferredCordova = $q.defer(),
+      var LOCAL_DOCUMENT_PREFIX = '_local/',
+        deferredCordova = $q.defer(),
         deferredCBLiteUrl = $q.defer(),
         cbliteUrlPromise = deferredCordova.promise.then(function () { return deferredCBLiteUrl.promise; }),
         cblite;
@@ -75,7 +76,7 @@
             var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken},
               actions = {
                 'get':  {method: 'GET',  headers: headers},
-                'list': {method: 'GET', headers: headers, isArray: true},
+                'list': {method: 'GET',  headers: headers, isArray: true},
                 'put':  {method: 'PUT',  headers: headers},
                 'post': {method: 'POST', headers: headers}
               };
@@ -133,7 +134,7 @@
             openReplication = openResource('_replicate');
 
           function validateDocument(content) {
-            var type = typeof (content);
+            var type = typeof content;
             switch (type) {
             case "string":
               if (typeof JSON.parse(content) !== "object") {
@@ -192,10 +193,12 @@
               return this.info().then(
                 function (info) { return info; },
                 function (error) {
-                  if (error.status === 404) return that.create();
+                  if (error.status === 404) {
+                    return that.create();
+                  }
                   throw "Unable to create database: " + error;
                 }
-              )
+              );
             },
 
             changes: function (spec) {
@@ -208,19 +211,28 @@
 
             // Documents
             document: function (id) {
+              var isLocalDocument = (angular.isDefined(id) && id.slice(0, LOCAL_DOCUMENT_PREFIX.length) === LOCAL_DOCUMENT_PREFIX),
+                resourceString = isLocalDocument ? ':db/_local/:doc' : ':db/:doc';
+
+              if (isLocalDocument) {
+                id = id.slice(LOCAL_DOCUMENT_PREFIX.length);
+              }
+
               return {
                 load: function (spec) {
                   spec = angular.extend({}, spec, {db: databaseName, doc: id});
                   $log.debug("Asking Couchbase Lite for document with id [" + id + "] in database [" + databaseName + "]");
-                  return openResource(':db/:doc', spec).then(function (document) {
+                  return openResource(resourceString, spec).then(function (document) {
                     return document.get().$promise;
+                  }, function (error) {
+                    throw error;
                   });
                 },
 
                 save: function (content) {
                   validateDocument(content);
 
-                  if (!angular.isDefined(id)) {
+                  if (!isLocalDocument && !angular.isDefined(id)) {
                     // If no id has been provided, then see if we can pull one from the document
                     id = content._id;
                     if (id === null || !angular.isDefined(id)) {
@@ -237,7 +249,7 @@
                   }
 
                   $log.debug("Asking Couchbase Lite to save document with id [" + id + "] in database [" + databaseName + "]");
-                  return openResource(':db/:doc', {db: databaseName, doc: id}).then(function (document) {
+                  return openResource(resourceString, {db: databaseName, doc: id}).then(function (document) {
                     return document.put(content).$promise;
                   });
                 }
@@ -248,7 +260,9 @@
             localDocument: function (id) {
               var that = this;
 
-              if (id.slice(0, 7) !== '_local/') throw "Invalid local document identifier '" + id + "'";
+              if (id.slice(0, 7) !== '_local/') {
+                throw "Invalid local document identifier '" + id + "'";
+              }
 
               return {
                 load: function (spec) {
