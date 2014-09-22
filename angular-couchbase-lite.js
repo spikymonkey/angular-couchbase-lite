@@ -173,11 +173,17 @@
               });
             },
 
-            exists: function () {
+            checkIfExists: function () {
               $log.debug("Asking Couchbase Lite if database [" + databaseName + "] exists");
               return this.info().then(
-                function () { return true; },
-                function () { return false; }
+                function () {
+                  $log.debug("Couchbase Lite database '" + databaseName + "' exists");
+                  return true;
+                },
+                function () {
+                  $log.debug("Couchbase Lite database '" + databaseName + "' does not exist");
+                  return false;
+                }
               );
             },
 

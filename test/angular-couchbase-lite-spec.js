@@ -184,7 +184,7 @@ describe('Angular Couchbase Lite', function () {
         .respond(200, response);
 
       runs(function() {
-        return cblite.database(dbname).exists()
+        return cblite.database(dbname).checkIfExists()
           .then(function(exists) {
             expect(exists).toBe(true);
           });
@@ -201,7 +201,7 @@ describe('Angular Couchbase Lite', function () {
         .respond(404, response);
 
       runs(function() {
-        return cblite.database(dbname).exists()
+        return cblite.database(dbname).checkIfExists()
           .then(function(exists) {
             expect(exists).toBe(false);
           });
