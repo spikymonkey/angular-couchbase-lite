@@ -1,5 +1,32 @@
 describe('Angular Couchbase Lite', function () {
 
+  // Polyfill Function.bind for PhantomJS
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function(oThis) {
+      if (typeof this !== 'function') {
+        // closest thing possible to the ECMAScript 5
+        // internal IsCallable function
+        throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+      }
+
+      var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP = function() {},
+        fBound = function() {
+          return fToBind.apply(this instanceof fNOP && oThis
+              ? this
+              : oThis,
+            aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+      fNOP.prototype = this.prototype;
+      fBound.prototype = new fNOP();
+
+      return fBound;
+    };
+  }
+
+
   var $httpBackend;
   var url = "my.couchbase.lite";
   var cbliteUrl = "http://username:password@" + url + "/";
@@ -33,7 +60,13 @@ describe('Angular Couchbase Lite', function () {
   beforeEach(inject(function($injector, _cblite_) {
     $httpBackend = $injector.get('$httpBackend');
     cblite = _cblite_;
-    document.dispatchEvent(new window.Event('deviceready'));
+
+    // Create the event.
+    var event = document.createEvent('Event');
+    event.initEvent('deviceready', true, true);
+    document.dispatchEvent(event);
+
+//    document.dispatchEvent(new window.Event('deviceready'));
   }));
 
   afterEach(function() {
@@ -483,7 +516,7 @@ describe('Angular Couchbase Lite', function () {
       var queryParams = {attachments: true, conflicts: true};
 
       expect(cblite.database(dbname).localDocument.bind(null, documentId))
-          .toThrow("Invalid local document identifier '" + documentId + "'")
+        .toThrow("Invalid local document identifier '" + documentId + "'")
     })
   });
 
