@@ -291,6 +291,7 @@
                   target: spec.url,
                   continuous: spec.continuous
                 };
+                $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
               });
             },
@@ -303,6 +304,7 @@
                   target: databaseName,
                   continuous: spec.continuous
                 };
+                $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
               });
             },
@@ -318,6 +320,7 @@
 
                   return that.replicateFrom(spec).then(
                     function (remoteToLocalResponse) {
+                      $log.error('Couchbase Lite replication request failed: ' + JSON.stringify(remoteToLocalResponse));
                       combinedResponse.remoteToLocal = remoteToLocalResponse;
                       sync.resolve(combinedResponse);
                     },
@@ -328,6 +331,7 @@
                   );
                 },
                 function (localToRemoteError) {
+                  $log.error('Couchbase Lite replication request failed: ' + JSON.stringify(localToRemoteError));
                   combinedResponse.localToRemote = localToRemoteError;
                   sync.reject(combinedResponse);
                 }
