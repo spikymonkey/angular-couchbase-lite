@@ -611,46 +611,98 @@ describe('Angular Couchbase Lite', function () {
   });
 
   describe('continuous replication', function () {
-      it("can be initiated from local -> remote", function () {
-        var request = {
-          source: dbname,
-          target: syncUrl,
-          continuous: true
-        };
-        var response = {
-          "session_id": "repl001",
-          "ok": true
-        };
-        $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
-          .respond(200, response);
+    it("can be initiated from local -> remote", function () {
+      var request = {
+        source: dbname,
+        target: syncUrl,
+        continuous: true
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
 
-        runs(function () {
-          return cblite.database(dbname).replicateTo({url: syncUrl, continuous: true}).then(function (result) {
-            expect(result).toContainAll(response);
-          });
-        })
-      });
+      runs(function () {
+        return cblite.database(dbname).replicateTo({url: syncUrl, continuous: true}).then(function (result) {
+          expect(result).toContainAll(response);
+        });
+      })
+    });
 
-      it("can be initiated from remote -> local", function () {
-        var request = {
-          source: syncUrl,
-          target: dbname,
-          continuous: true
-        };
-        var response = {
-          "session_id": "repl001",
-          "ok": true
-        };
-        $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
-          .respond(200, response);
+    it("can be initiated from remote -> local", function () {
+      var request = {
+        source: syncUrl,
+        target: dbname,
+        continuous: true
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
 
-        runs(function () {
-          return cblite.database(dbname).replicateFrom({url: syncUrl, continuous: true}).then(function (result) {
-            expect(result).toContainAll(response);
-          });
+      runs(function () {
+        return cblite.database(dbname).replicateFrom({url: syncUrl, continuous: true}).then(function (result) {
+          expect(result).toContainAll(response);
         });
       });
     });
+  });
+
+  describe('replication requiring headers', function () {
+    it("can be initiated from local -> remote", function () {
+      var request = {
+        source: dbname,
+        target: syncUrl,
+        continuous: true,
+        headers: {Cookie: "SyncGatewaySession=9c837dddb656d7d55ae0a326b77faa5482fbc7fb"}
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
+
+      runs(function () {
+        return cblite.database(dbname).replicateTo({
+          url: syncUrl,
+          continuous: true,
+          headers: {Cookie: "SyncGatewaySession=9c837dddb656d7d55ae0a326b77faa5482fbc7fb"}
+        }).then(function (result) {
+          expect(result).toContainAll(response);
+        });
+      })
+    });
+
+    it("can be initiated from remote -> local", function () {
+      var request = {
+        source: syncUrl,
+        target: dbname,
+        continuous: true,
+        headers: {Cookie: "SyncGatewaySession=9c837dddb656d7d55ae0a326b77faa5482fbc7fb"}
+      };
+      var response = {
+        "session_id": "repl001",
+        "ok": true
+      };
+      $httpBackend.expectPOST(restUrl + "/_replicate", request, expectedHeaders)
+        .respond(200, response);
+
+      runs(function () {
+        return cblite.database(dbname).replicateFrom({
+            url: syncUrl,
+            continuous: true,
+            headers: {Cookie: "SyncGatewaySession=9c837dddb656d7d55ae0a326b77faa5482fbc7fb"}
+          }).then(function (result) {
+            expect(result).toContainAll(response);
+        });
+      });
+    });
+  });
 
   describe('one-off sync', function () {
     it("can be initiated", function () {

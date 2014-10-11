@@ -231,6 +231,7 @@
                   return openResource(resourceString, spec).then(function (document) {
                     return document.get().$promise;
                   }, function (error) {
+                    $log.error("Failed to load document '" + id + "': " + JSON.stringify(error));
                     throw error;
                   });
                 },
@@ -289,7 +290,8 @@
                 var request = {
                   source: databaseName,
                   target: spec.url,
-                  continuous: spec.continuous
+                  continuous: spec.continuous,
+                  headers: spec.headers
                 };
                 $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
@@ -302,8 +304,9 @@
                 var request = {
                   source: spec.url,
                   target: databaseName,
-                  continuous: spec.continuous
-                };
+                  continuous: spec.continuous,
+                  headers: spec.headers
+            };
                 $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
               });
