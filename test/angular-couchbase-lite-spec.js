@@ -470,56 +470,6 @@ describe('Angular Couchbase Lite', function () {
     });
   });
 
-  describe('local documents', function () {
-    it('with a valid local id can be fetched', function () {
-      var documentId = "_local/document";
-      var queryParams = {attachments: true, conflicts: true};
-      var response = {
-        "_id" : documentId,
-        "_rev" : "1-4101356e9c47d15d4f8f7390d05dbbcf",
-        foo: "bar"
-      };
-      $httpBackend.expectGET(restUrl + "/" + dbname + "/" + documentId + "?attachments=true&conflicts=true", expectedHeaders)
-          .respond(200, response);
-
-      runs(function() {
-        return cblite.database(dbname).localDocument(documentId).load(queryParams)
-          .then(function(result) {
-            expect(result).toContainAll(response);
-          });
-      });
-    });
-
-    it('with a valid local id can be saved', function () {
-      var documentId = "_local/document";
-      var document = {
-        foo: "bar"
-      };
-      var response = {
-        "id" : documentId,
-        "rev" : "1-4101356e9c47d15d4f8f7390d05dbbcf",
-        "ok" : true
-      };
-      $httpBackend.expectPUT(restUrl + "/" + dbname + "/" + documentId, document, expectedHeaders)
-          .respond(201, response);
-
-      runs(function() {
-        return cblite.database(dbname).document(documentId).save(document)
-            .then(function(result) {
-              expect(result).toContainAll(response);
-            });
-      });
-    });
-
-    it('with an invalid local id cause an error', function () {
-      var documentId = "document";
-      var queryParams = {attachments: true, conflicts: true};
-
-      expect(cblite.database(dbname).localDocument.bind(null, documentId))
-        .toThrow("Invalid local document identifier '" + documentId + "'")
-    })
-  });
-
   describe('one-off replication', function () {
     it("can be initiated from local -> remote", function () {
       var request = {

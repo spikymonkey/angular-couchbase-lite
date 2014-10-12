@@ -27,8 +27,7 @@
   angular.module('cblite', ['ngResource', 'ab-base64'])
     .factory('cblite', function cbliteFactory($resource, $log, $q, base64, $filter) {
 
-      var LOCAL_DOCUMENT_PREFIX = '_local/',
-        deferredCordova = $q.defer(),
+      var deferredCordova = $q.defer(),
         deferredCBLiteUrl = $q.defer(),
         cbliteUrlPromise = deferredCordova.promise.then(function () { return deferredCBLiteUrl.promise; }),
         cblite;
@@ -39,6 +38,8 @@
           var http = "http://",
             credentials = url.slice(http.length, url.indexOf('@')),
             basicAuthToken = base64.encode(credentials);
+
+          $log.debug("Couchbase Lite auth token: " + basicAuthToken);
 
           return {
             credentials: credentials,
@@ -217,12 +218,7 @@
 
             // Documents
             document: function (id) {
-              var isLocalDocument = (angular.isDefined(id) && id.slice(0, LOCAL_DOCUMENT_PREFIX.length) === LOCAL_DOCUMENT_PREFIX),
-                resourceString = isLocalDocument ? ':db/_local/:doc' : ':db/:doc';
-
-              if (isLocalDocument) {
-                id = id.slice(LOCAL_DOCUMENT_PREFIX.length);
-              }
+              var resourceString = ':db/:doc';
 
               return {
                 load: function (spec) {
@@ -236,10 +232,14 @@
                   });
                 },
 
-                save: function (content) {
+                save: function (content, revision) {
                   validateDocument(content);
 
-                  if (!isLocalDocument && !angular.isDefined(id)) {
+                  if (revision != null && angular.isDefined(revision)) {
+                    content._rev = revision
+                  }
+
+                  if (/*!isLocalDocument && */!angular.isDefined(id)) {
                     // If no id has been provided, then see if we can pull one from the document
                     id = content._id;
                     if (id === null || !angular.isDefined(id)) {
@@ -256,31 +256,12 @@
                   }
 
                   $log.debug("Asking Couchbase Lite to save document with id [" + id + "] in database [" + databaseName + "]");
+                  $log.debug(JSON.stringify(content));
                   return openResource(resourceString, {db: databaseName, doc: id}).then(function (document) {
                     return document.put(content).$promise;
                   });
                 }
               };
-            },
-
-            // Local documents
-            localDocument: function (id) {
-              var that = this;
-
-              if (id.slice(0, 7) !== '_local/') {
-                throw "Invalid local document identifier '" + id + "'";
-              }
-
-              return {
-                load: function (spec) {
-                  return that.document(id).load(spec);
-                },
-
-                save: function (content) {
-                  if (!angular.isDefined(id)) throw 'Local document id must be specified';
-                  return that.document(id).save(content);
-                }
-              }
             },
 
             // Replication and sync
@@ -306,7 +287,7 @@
                   target: databaseName,
                   continuous: spec.continuous,
                   headers: spec.headers
-            };
+                };
                 $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
               });
