@@ -22,6 +22,8 @@
  THE SOFTWARE.
  */
 
+/*global window, angular, document */
+
 (function () {
   'use strict';
   angular.module('cblite', ['ngResource', 'ab-base64'])
@@ -235,11 +237,11 @@
                 save: function (content, revision) {
                   validateDocument(content);
 
-                  if (revision != null && angular.isDefined(revision)) {
-                    content._rev = revision
+                  if (revision !== null && angular.isDefined(revision)) {
+                    content._rev = revision;
                   }
 
-                  if (/*!isLocalDocument && */!angular.isDefined(id)) {
+                  if (!angular.isDefined(id)) {
                     // If no id has been provided, then see if we can pull one from the document
                     id = content._id;
                     if (id === null || !angular.isDefined(id)) {

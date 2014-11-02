@@ -1,8 +1,12 @@
+/*global window, angular, module, inject, document, describe, it, before, beforeEach, after, afterEach, runs, expect */
+
 describe('Angular Couchbase Lite', function () {
+  "use strict";
 
   // Polyfill Function.bind for PhantomJS
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
   if (!Function.prototype.bind) {
-    Function.prototype.bind = function(oThis) {
+    Function.prototype.bind = function (oThis) {
       if (typeof this !== 'function') {
         // closest thing possible to the ECMAScript 5
         // internal IsCallable function
@@ -11,11 +15,9 @@ describe('Angular Couchbase Lite', function () {
 
       var aArgs = Array.prototype.slice.call(arguments, 1),
         fToBind = this,
-        fNOP = function() {},
-        fBound = function() {
-          return fToBind.apply(this instanceof fNOP && oThis
-              ? this
-              : oThis,
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP && oThis ? this : oThis,
             aArgs.concat(Array.prototype.slice.call(arguments)));
         };
 
@@ -27,13 +29,13 @@ describe('Angular Couchbase Lite', function () {
   }
 
 
-  var $httpBackend;
-  var url = "my.couchbase.lite";
-  var cbliteUrl = "http://username:password@" + url + "/";
-  var restUrl = "http://username@" + url;
-  var syncUrl = "http://my.sync.gateway/sync-db";
-  var dbname = "my-database";
-  var cblite;
+  var $httpBackend,
+    url = "my.couchbase.lite",
+    cbliteUrl = "http://username:password@" + url + "/",
+    restUrl = "http://username@" + url,
+    syncUrl = "http://my.sync.gateway/sync-db",
+    dbname = "my-database",
+    cblite;
 
   window.cblite = {
     getURL: function (callback) {
@@ -43,12 +45,12 @@ describe('Angular Couchbase Lite', function () {
 
   function expectedHeaders(headers) {
     // Always expect the Authorization header to be set
-    return headers["Authorization"] === "Basic dXNlcm5hbWU6cGFzc3dvcmQ=";
+    return headers.Authorization === "Basic dXNlcm5hbWU6cGFzc3dvcmQ=";
   }
 
   beforeEach(function () {
     this.addMatchers({
-      toCauseTestFailure: function () { console.log('hit'); return false; },
+      toCauseTestFailure: function () { return false; },
       toContainAll: function (expected) {
         return angular.equals(expected, this.actual);
       }
@@ -57,7 +59,7 @@ describe('Angular Couchbase Lite', function () {
 
   beforeEach(module('cblite'));
 
-  beforeEach(inject(function($injector, _cblite_) {
+  beforeEach(inject(function ($injector, _cblite_) {
     $httpBackend = $injector.get('$httpBackend');
     cblite = _cblite_;
 
@@ -65,17 +67,15 @@ describe('Angular Couchbase Lite', function () {
     var event = document.createEvent('Event');
     event.initEvent('deviceready', true, true);
     document.dispatchEvent(event);
-
-//    document.dispatchEvent(new window.Event('deviceready'));
   }));
 
-  afterEach(function() {
+  afterEach(function () {
     $httpBackend.verifyNoOutstandingExpectation();
     $httpBackend.verifyNoOutstandingRequest();
   });
 
-  describe('server', function() {
-    it('can be queried for meta-information', function() {
+  describe('server', function () {
+    it('can be queried for meta-information', function () {
       var response = {
         "couchdb" : "Welcome",
         "CouchbaseLite" : "Welcome",
@@ -85,10 +85,10 @@ describe('Angular Couchbase Lite', function () {
       $httpBackend.expectGET(restUrl, expectedHeaders)
         .respond(200, response);
 
-      runs(function() {
-        return cblite.info().then(function(info) {
-            expect(info).toContainAll(response);
-          });
+      runs(function () {
+        return cblite.info().then(function (info) {
+          expect(info).toContainAll(response);
+        });
       });
     });
 
@@ -105,9 +105,9 @@ describe('Angular Couchbase Lite', function () {
       $httpBackend.expectGET(restUrl + "/_active_tasks", expectedHeaders)
         .respond(200, response);
 
-      runs(function() {
+      runs(function () {
         return cblite.activeTasks()
-          .then(function(tasks) {
+          .then(function (tasks) {
             expect(tasks.length).toBe(1);
             expect(tasks[0]).toContainAll(response[0]);
           });
@@ -119,9 +119,9 @@ describe('Angular Couchbase Lite', function () {
 
       $httpBackend.expectGET(restUrl + "/_all_dbs", expectedHeaders).respond(200, response);
 
-      runs(function() {
+      runs(function () {
         return cblite.allDatabases()
-          .then(function(databases) {
+          .then(function (databases) {
             var responseIndex = 0;
 
             expect(databases.length).toEqual(response.length);
@@ -266,13 +266,12 @@ describe('Angular Couchbase Lite', function () {
       runs(function() {
         return cblite.database(dbname).create().then(
           function (unexpectedSuccess) {
-            console.log("success");
             expect(unexpectedSuccess).toCauseTestFailure();
           },
           function(error) {
             expect(error.data).toContainAll(response);
           });
-      })
+      });
     });
 
     it("can be lazily created/fetched when they already exist", function () {
@@ -488,7 +487,7 @@ describe('Angular Couchbase Lite', function () {
         return cblite.database(dbname).replicateTo(syncUrl).then(function (result) {
           expect(result).toContainAll(response);
         });
-      })
+      });
     });
 
     it("local -> remote failures are reported", function () {
@@ -512,7 +511,7 @@ describe('Angular Couchbase Lite', function () {
           function (error) {
             expect(error.data).toContainAll(response);
           });
-      })
+      });
     });
 
     it("can be initiated from remote -> local", function () {
@@ -578,7 +577,7 @@ describe('Angular Couchbase Lite', function () {
         return cblite.database(dbname).replicateTo({url: syncUrl, continuous: true}).then(function (result) {
           expect(result).toContainAll(response);
         });
-      })
+      });
     });
 
     it("can be initiated from remote -> local", function () {
@@ -625,7 +624,7 @@ describe('Angular Couchbase Lite', function () {
         }).then(function (result) {
           expect(result).toContainAll(response);
         });
-      })
+      });
     });
 
     it("can be initiated from remote -> local", function () {
