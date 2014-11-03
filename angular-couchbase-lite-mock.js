@@ -1,3 +1,4 @@
+/*globals angular */
 (function() {
   'use strict';
 
@@ -13,23 +14,23 @@
           var that = this;
           var document = {
             setContent: function (content) {
-              that.content = content
+              that.content = content;
             },
 
             save: function (data) {
               return {
                 then: function (success, failure) {
-                  return success({})
+                  return success({});
                 }
-              }
+              };
             },
 
             load: function () {
               return {
                 then: function (fn) {
-                  return fn(that.content)
+                  return fn(that.content);
                 }
-              }
+              };
             }
           };
           documents[documentName] = document;
@@ -40,22 +41,22 @@
           checkIfExists: function () {
             return {
               then: function (fn) {
-                return fn(true)
+                return fn(true);
               }
-            }
+            };
           },
 
           createIfMissing: function () {
             return {
               then: function (fn) {
-                fn()
+                fn();
               }
-            }
+            };
           },
 
           document: function (documentName) {
             if (angular.isUndefined(documentName)) {
-              documentName = 'doc-or-db-generated-name'
+              documentName = 'doc-or-db-generated-name';
             }
 
             return documents[documentName] ? documents[documentName] : new DocumentMock(documentName);
@@ -64,9 +65,9 @@
           syncWith: function (params) {
             return {
               then: function (fn) {
-                return fn()
+                return fn();
               }
-            }
+            };
           }
         };
 
@@ -82,13 +83,12 @@
         activeTasks: function () {
           return {
             then: function (fn) {
-              return fn()
+              return fn();
             }
-          }
+          };
         }
       };
-
-    })
+    });
 })();
 
 
