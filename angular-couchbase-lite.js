@@ -217,16 +217,17 @@
               });
             },
             
-            all: function (filter) {
-              $log.debug("Asking Couchbase Lite to get all documents in database [" + databaseName + "]");
+            all: function (spec, records) {
+              spec = angular.extend({}, spec, {db: databaseName});
               var resourceString = ':db/_all_docs';
-              if (filter) {
+              $log.debug("Asking Couchbase Lite to get all documents in database [" + databaseName + "]");
+              if (angular.isArray(records)) {
                 $log.debug(JSON.stringify(filter));
-                return openResource(resourceString, {db: databaseName}).then(function (docs) {
-                  return docs.filter(filter).$promise;
+                return openResource(resourceString, spec).then(function (docs) {
+                  return docs.filter(records).$promise;
                 });
               } else {
-                return openResource(resourceString, {db: databaseName}).then(function (docs) {
+                return openResource(resourceString, spec).then(function (docs) {
                   return docs.list().$promise;
                 });
               }
@@ -280,7 +281,6 @@
               return {
                 save: function (spec) {
                   spec = toDesignDoc(spec);
-                  
                   $log.debug("Asking Couchbase Lite to save design document with id [" + designId + "] in database [" + databaseName + "]");
                   $log.debug(JSON.stringify(spec));
                   return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
@@ -293,17 +293,17 @@
                     return document.get().$promise;
                   });
                 },
-                view: function (id, filter) {
-                  $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
+                view: function (id, spec, params) {
+                  spec = angular.extend({}, spec, {db: databaseName, designId: designId, id: id});
                   var viewString = designString + '/:id';
-                  
-                  if (filter) {
-                    $log.debug(JSON.stringify(filter));
-                    return openResource(viewString, {db: databaseName, designId: designId, id: id}).then(function (docs) {
+                  $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
+                  if (angular.isArray(params)) {
+                    $log.debug(JSON.stringify(params));
+                    return openResource(viewString, spec).then(function (docs) {
                       return docs.filter(filter).$promise;
                     });
                   } else {
-                    return openResource(viewString, {db: databaseName, designId: designId, id: id}).then(function (docs) {
+                    return openResource(viewString, spec).then(function (docs) {
                       return docs.list().$promise;
                     });
                   }
