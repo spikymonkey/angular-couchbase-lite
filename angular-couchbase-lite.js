@@ -222,9 +222,9 @@
               var resourceString = ':db/_all_docs';
               $log.debug("Asking Couchbase Lite to get all documents in database [" + databaseName + "]");
               if (angular.isArray(records)) {
-                $log.debug(JSON.stringify(filter));
+                $log.debug(JSON.stringify(records));
                 return openResource(resourceString, spec).then(function (docs) {
-                  return docs.filter(records).$promise;
+                  return docs.filter({ keys: records }).$promise;
                 });
               } else {
                 return openResource(resourceString, spec).then(function (docs) {
@@ -293,14 +293,14 @@
                     return document.get().$promise;
                   });
                 },
-                view: function (id, spec, params) {
+                view: function (id, spec, records) {
                   spec = angular.extend({}, spec, {db: databaseName, designId: designId, id: id});
                   var viewString = designString + '/:id';
                   $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
-                  if (angular.isArray(params)) {
-                    $log.debug(JSON.stringify(params));
+                  if (angular.isArray(records)) {
+                    $log.debug(JSON.stringify(records));
                     return openResource(viewString, spec).then(function (docs) {
-                      return docs.filter(filter).$promise;
+                      return docs.filter({ keys: records }).$promise;
                     });
                   } else {
                     return openResource(viewString, spec).then(function (docs) {
