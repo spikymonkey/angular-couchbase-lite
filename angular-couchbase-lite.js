@@ -79,11 +79,10 @@
                 'get':    {method: 'GET',  headers: headers},
                 'list':   {method: 'GET',  headers: headers, isArray: true},
                 'put':    {method: 'PUT',  headers: headers},
-                'post':   {method: 'POST', headers: headers},
-                'filter': {method: 'POST', headers: headers, isArray: true}
+                'post':   {method: 'POST', headers: headers}
               };
 
-            return $resource(parsedUrl.url + path, paramDefaults, actions);
+            return $resource(parsedUrl.urlNoCredentials + path, paramDefaults, actions);
           },
           null,
           function (notification) {
@@ -224,11 +223,11 @@
               if (angular.isArray(records)) {
                 $log.debug(JSON.stringify(records));
                 return openResource(resourceString, spec).then(function (docs) {
-                  return docs.filter({ keys: records }).$promise;
+                  return docs.post({ keys: records }).$promise;
                 });
               } else {
                 return openResource(resourceString, spec).then(function (docs) {
-                  return docs.list().$promise;
+                  return docs.get().$promise;
                 });
               }
             },
@@ -300,11 +299,11 @@
                   if (angular.isArray(records)) {
                     $log.debug(JSON.stringify(records));
                     return openResource(viewString, spec).then(function (docs) {
-                      return docs.filter({ keys: records }).$promise;
+                      return docs.post({ keys: records }).$promise;
                     });
                   } else {
                     return openResource(viewString, spec).then(function (docs) {
-                      return docs.list().$promise;
+                      return docs.get().$promise;
                     });
                   }
                 }
