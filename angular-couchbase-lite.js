@@ -294,6 +294,14 @@
                 },
                 view: function (id, spec, records) {
                   spec = angular.extend({}, spec, {db: databaseName, designId: designId, id: id});
+                  // some values need to be properly encoded
+                  angular.forEach(spec, function(v, k) {
+                    switch (k) {
+                      case "startkey":
+                      case "endkey":
+                        spec[k] = "" + JSON.stringify(v);
+                    }
+                  });
                   var viewString = designString + '/_view/:id';
                   $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
                   if (angular.isArray(records)) {
