@@ -51,7 +51,7 @@
           return {
             credentials: credentials,
             basicAuthToken: basicAuthToken,
-            url: host,
+            url: url,
             urlNoCredentials: http + host + port // '@' symbol
           };
         }
@@ -86,13 +86,13 @@
               headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
             }
             var actions = {
-                'get':  {method: 'GET',  headers: headers},
-                'list': {method: 'GET',  headers: headers, isArray: true},
-                'put':  {method: 'PUT',  headers: headers},
-                'post': {method: 'POST', headers: headers}
-              };
+              'get':  {method: 'GET',  headers: headers},
+              'list': {method: 'GET',  headers: headers, isArray: true},
+              'put':  {method: 'PUT',  headers: headers},
+              'post': {method: 'POST', headers: headers}
+            };
 
-            return $resource(parsedUrl.url + path, paramDefaults, actions);
+            return $resource(parsedUrl.urlNoCredentials + path, paramDefaults, actions);
           },
           null,
           function (notification) {
@@ -224,6 +224,108 @@
               return openResource(':db/_changes', spec).then(function (db) {
                 return db.get().$promise;
               });
+            },
+            
+            all: function (spec, records) {
+              spec = angular.extend({}, spec, {db: databaseName});
+              var resourceString = ':db/_all_docs';
+              $log.debug("Asking Couchbase Lite to get all documents in database [" + databaseName + "]");
+              if (angular.isArray(records)) {
+                $log.debug(JSON.stringify(records));
+                return openResource(resourceString, spec).then(function (docs) {
+                  return docs.post({ keys: records }).$promise;
+                });
+              } else {
+                return openResource(resourceString, spec).then(function (docs) {
+                  return docs.get().$promise;
+                });
+              }
+            },
+            
+            // Design Doc
+            design: function (designId) {
+              function cleanFunction(func) {
+                var type = typeof func;
+                switch (type) {
+                case "function":
+                  // stringify and scrub
+                  return String(func).replace(/\s+/g, " ");
+
+                case "string":
+                  return func;
+                
+                default:
+                  throw "Invalid function definition";
+                }           
+              }
+              
+              function toDesignDoc(content) {
+
+                validateDocument(content);
+                if (typeof content == "string") {
+                  content = JSON.parse(content);
+                }
+                if (typeof content.views != "object") {
+                  throw "Design Doc is missing valid view structure";
+                }
+                angular.forEach(content.views, function(value, key) {
+                  value.map = cleanFunction(value.map);
+                  
+                  if (typeof value.reduce != "undefined") {
+                    value.reduce = cleanFunction(value.reduce);
+                  }
+                  
+                  this[key] = value;
+                  
+                }, content.views);
+                
+                if (typeof content.language == "undefined") {
+                  content.language = "javascript";
+                }
+                return content;
+              }
+
+              var designString = ':db/_design/:designId';
+              
+              return {
+                save: function (spec) {
+                  spec = toDesignDoc(spec);
+                  $log.debug("Asking Couchbase Lite to save design document with id [" + designId + "] in database [" + databaseName + "]");
+                  $log.debug(JSON.stringify(spec));
+                  return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
+                    return document.put(spec).$promise;
+                  });
+                },
+                load: function () {
+                  $log.debug("Asking Couchbase Lite to load design document with id [" + designId + "] in database [" + databaseName + "]");
+                  return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
+                    return document.get().$promise;
+                  });
+                },
+                view: function (id, spec, records) {
+                  spec = angular.extend({}, spec, {db: databaseName, designId: designId, id: id});
+                  // some values need to be properly encoded
+                  angular.forEach(spec, function(v, k) {
+                    switch (k) {
+                      case "startkey":
+                      case "endkey":
+                        spec[k] = "" + JSON.stringify(v);
+                    }
+                  });
+                  var viewString = designString + '/_view/:id';
+                  $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
+                  if (angular.isArray(records)) {
+                    $log.debug(JSON.stringify(records));
+                    return openResource(viewString, spec).then(function (docs) {
+                      return docs.post({ keys: records }).$promise;
+                    });
+                  } else {
+                    return openResource(viewString, spec).then(function (docs) {
+                      return docs.get().$promise;
+                    });
+                  }
+                }
+              };
             },
 
             // Documents
