@@ -36,18 +36,23 @@
 
       function deviceReady() {
         function ParsedUrl(url) {
-          // Trim off the leading 'http://'
-          var http = "http://",
-            credentials = url.slice(http.length, url.indexOf('@')),
-            basicAuthToken = base64.encode(credentials);
+
+          var parsed = url.match(/^(https?:\/\/)(?:([^@]+)@)?([^:\/]+)(:[0-9]+)?\/$/);
+
+          var http = parsed[1],
+            credentials = parsed[2] ? parsed[2] : "",
+            host = parsed[3],
+            port = parsed[4] ? parsed[4] : "",
+            basicAuthToken = (credentials != "") ? base64.encode(credentials) : "";
 
           $log.debug("Couchbase Lite auth token: " + basicAuthToken);
 
+          // FIXME: seems like more is being returned than needed?
           return {
             credentials: credentials,
             basicAuthToken: basicAuthToken,
-            url: url,
-            urlNoCredentials: http + url.slice(http.length + credentials.length + 1) // '@' symbol
+            url: host,
+            urlNoCredentials: http + host + port // '@' symbol
           };
         }
 
@@ -76,8 +81,11 @@
       function openResource(path, paramDefaults) {
         return cbliteUrlPromise.then(
           function (parsedUrl) {
-            var headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken},
-              actions = {
+            var headers = {};
+            if (parsedUrl.basicAuthToken != "") {
+              headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
+            }
+            var actions = {
                 'get':  {method: 'GET',  headers: headers},
                 'list': {method: 'GET',  headers: headers, isArray: true},
                 'put':  {method: 'PUT',  headers: headers},
