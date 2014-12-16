@@ -42,7 +42,7 @@
           var http = parsed[1],
             credentials = parsed[2] ? parsed[2] : "",
             host = parsed[3],
-            port = parsed[4] ? parsed[4] : "/",
+            port = parsed[4] ? parsed[4] : "",
             basicAuthToken = (credentials != "") ? base64.encode(credentials) : "";
 
           $log.debug("Couchbase Lite auth token: " + basicAuthToken);
@@ -52,7 +52,7 @@
             credentials: credentials,
             basicAuthToken: basicAuthToken,
             url: url,
-            urlNoCredentials: http + host + port // '@' symbol
+            urlNoCredentials: http + host + port + "/" // '@' symbol
           };
         }
 
