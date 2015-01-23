@@ -89,7 +89,8 @@
               'get':  {method: 'GET',  headers: headers},
               'list': {method: 'GET',  headers: headers, isArray: true},
               'put':  {method: 'PUT',  headers: headers},
-              'post': {method: 'POST', headers: headers}
+              'post': {method: 'POST', headers: headers},
+              'delete': {method: 'DELETE', headers: headers}
             };
 
             return $resource(parsedUrl.urlNoCredentials + path, paramDefaults, actions);
@@ -372,7 +373,28 @@
                   return openResource(resourceString, {db: databaseName, doc: id}).then(function (document) {
                     return document.put(content).$promise;
                   });
+                },
+
+                delete: function (revision) {
+                  $log.debug("Asking Couchbase Lite to mark deleted on document with id [" + id + "] in database [" + databaseName + "]");
+
+                  if (!angular.isDefined(revision)) {
+                    // get latest revision
+                    return openResource(resourceString, {db: databaseName, doc: id}).then(function (document) {
+                      var promise = document.get().$promise;
+                      return promise.then(function (response) {
+                        return openResource(resourceString, {db: databaseName, doc: id, rev: response["_rev"]}).then(function (document) {
+                          return document.delete().$promise;
+                        });
+                      });
+                    });
+                  } else {
+                    return openResource(resourceString, {db: databaseName, doc: id, rev: revision}).then(function (document) {
+                      return document.delete().$promise;
+                    });
+                  }
                 }
+
               };
             },
 
