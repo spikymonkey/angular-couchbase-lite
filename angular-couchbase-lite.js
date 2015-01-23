@@ -219,6 +219,13 @@
               );
             },
 
+            compact: function() {
+              $log.debug("Asking Couchbase Lite to compact database [" + databaseName + "]");
+              return openResource(':db/_compact', {db: databaseName}).then(function (db) {
+                return db.post().$promise;
+              });
+            },
+
             changes: function (spec) {
               $log.debug("Asking Couchbase Lite for list of changes to database [" + databaseName + "]");
               spec = angular.extend({}, spec, {db: databaseName});
@@ -393,6 +400,16 @@
                       return document.delete().$promise;
                     });
                   }
+                },
+
+                purge: function(revisions) {
+                  // revisions is array of revision ids to be purged
+                  $log.debug("Asking Couchbase Lite to purge deleted documents from database [" + databaseName + "]");
+                  return openResource(':db/_purge', {db: databaseName}).then(function (db) {
+                    var body = {};
+                    body[id] = revisions;
+                    return db.post(body).$promise;
+                  });
                 }
 
               };
