@@ -9,7 +9,7 @@ ways. Take a peek by all means but please don't try using it in production ;) PR
 ## Install ##
 Install this module with `bower` or `npm`. 
 
-In your `index.html` include the necessary `.js` files.
+In your `index.html` include the necessary `<script>` tags.
 
       <script src="lib/angular-couchbase-lite/angular-couchbase-lite.js"></script>
       <script src="lib/angular-resource/angular-resource.min.js"></script>
@@ -19,7 +19,7 @@ In your `index.html` include the necessary `.js` files.
 Refer to the [Couchbase Lite API References](http://developer.couchbase.com/mobile/develop/references/couchbase-lite/rest-api/document/index.html) for more details.
 
 ### Create a database ###
-    cblite.database("testdb").create();
+    cblite.database("testdb").createIfMissing().then(function(db) {});
 
 ### Compact database ###
 To reclaim disk space.
@@ -31,8 +31,11 @@ Will automatically generate a revision ID. Will return a conflict 409 error if d
 
     cblite.database("testdb").document("testdoc").save({key:"value"});
 
+### Get all documents in database ###
+    cblite.database("testdb").all({include_docs:true}).then(function(documents) {});
+
 ### Get document ###
-    cblite.database("testdb").document("testdoc").load();
+    cblite.database("testdb").document("testdoc").load().then(function(document) {});
 
 ### Update document ###
 When updating, you need to specify the document revision you wish to save.
@@ -49,7 +52,7 @@ Mark document as deleted.
 ### Purge document ###
 Permanently remove from database. Can optionally specify array of revisions to delete.
 
-    cblite.database("testdb").document("testdoc").delete();
+    cblite.database("testdb").document("testdoc").purge();
 
 ## Testing ##
 Unit tests are implemented using [Jasmine 1.3](http://jasmine.github.io/1.3/introduction.html) and can be run using
