@@ -127,7 +127,9 @@
         userDatabases: function () {
           $log.debug("Asking Couchbase Lite for list of user databases");
           return this.allDatabases().then(function (databases) {
-            return $filter('filter')(databases, function (db) { return db.slice(0, 1) !== '_'; });
+            return $filter('filter')(databases, function (db) {
+              return db.name().slice(0, 1) !== '_';
+            });
           });
         },
 

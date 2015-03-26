@@ -15,12 +15,11 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      //'bower_components/jasmine/lib/jasmine-core/jasmine.js',
-      'bower_components/jasmine-as-promised/src/jasmine-as-promised.js',
       'bower_components/angular/angular.js',
       'bower_components/angular-resource/angular-resource.js',
-      'bower_components/angular-mocks/angular-mocks.js',
       'bower_components/angular-utf8-base64/angular-utf8-base64.js',
+      'bower_components/angular-mocks/angular-mocks.js',
+      'bower_components/jasmine-core/lib/jasmine-core/jasmine.js',
       'angular-couchbase-lite.js',
       'test/**/*-spec.js'
     ],
@@ -40,7 +39,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'brackets'],
 
 
     // web server port
