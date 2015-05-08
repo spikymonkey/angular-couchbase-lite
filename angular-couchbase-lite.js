@@ -304,6 +304,24 @@
                     return document.put(spec).$promise;
                   });
                 },
+                delete: function(revision) {
+                  $log.debug("Asking Couchbase Lite to delete design document with id [" + designId + "] in database [" + databaseName + "]");
+                  if (!angular.isDefined(revision)) {
+                    // get latest revision
+                    return openResource(designString, {db: databaseName, doc: id}).then(function (document) {
+                      var promise = document.get().$promise;
+                      return promise.then(function (response) {
+                        return openResource(designString, {db: databaseName, doc: id, rev: response["_rev"]}).then(function (document) {
+                          return document.delete().$promise;
+                        });
+                      });
+                    });
+                  } else {
+                    return openResource(designString, {db: databaseName, doc: id, rev: revision}).then(function (document) {
+                      return document.delete().$promise;
+                    });
+                  }
+                },
                 load: function () {
                   $log.debug("Asking Couchbase Lite to load design document with id [" + designId + "] in database [" + databaseName + "]");
                   return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
