@@ -165,16 +165,6 @@
             }
           }
 
-          function toReplicationSpec(spec) {
-            if (typeof spec === 'string') {
-              spec = {
-                url: spec,
-                continuous: false
-              };
-            }
-            return spec;
-          }
-
           return {
             name: function () { return databaseName; },
 
@@ -417,13 +407,17 @@
 
             // Replication and sync
             replicateTo: function (spec) {
-              spec = toReplicationSpec(spec);
+              if (angular.isString(spec)) {
+                spec = { url: spec };
+              }
               return openReplication.then(function (replication) {
                 var request = {
                   source: databaseName,
-                  target: spec.url,
-                  continuous: spec.continuous,
-                  headers: spec.headers
+                  target: {
+                    url: spec.url,
+                    headers: spec.headers
+                  },
+                  continuous: !!spec.continuous
                 };
                 $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
@@ -431,13 +425,17 @@
             },
 
             replicateFrom: function (spec) {
-              spec = toReplicationSpec(spec);
+              if (angular.isString(spec)) {
+                spec = { url: spec };
+              }
               return openReplication.then(function (replication) {
                 var request = {
-                  source: spec.url,
+                  source: {
+                    url: spec.url,
+                    headers: spec.headers
+                  },  
                   target: databaseName,
-                  continuous: spec.continuous,
-                  headers: spec.headers
+                  continuous: !!spec.continuous
                 };
                 $log.debug('Couchbase Lite requesting replication: ' + JSON.stringify(request));
                 return replication.post(request).$promise;
