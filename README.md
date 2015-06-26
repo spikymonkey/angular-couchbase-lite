@@ -2,6 +2,9 @@
 An AngularJS wrapper for the [Couchbase Lite](http://developer.couchbase.com/mobile/)
 [Cordova plugin](http://plugins.cordova.io/#/package/com.couchbase.lite.phonegap).
 
+## Note ##
+This is intended for use with Couchbase-Lite-PhoneGap-Plugin (com.couchbase.lite.phonegap) 1.1.x. If you are using an older version you probably want to use the version of this repo tagged v1.0.4
+
 ## Warning ##
 This is very much a work in progress. Obvious features are missing. The features that are there might fail in surprising
 ways. Take a peek by all means but please don't try using it in production ;) PRs are very welcome.
