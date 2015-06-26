@@ -57,6 +57,25 @@ Permanently remove from database. Can optionally specify array of revisions to d
 
     cblite.database("testdb").document("testdoc").purge();
 
+### Design document ###
+
+    var spec = {"language": "javascript",
+                "views": {
+                    "all": {
+                        "map": "function(doc) {emit(doc.id)}",
+                        "reduce: "function(key, values, rereduce) {return;}"
+    cblite.database("testdb").design("designName").view(spec);
+    
+### Accessing views ###
+Using reduce
+
+    var opts = {reduce: true, group: true, group_level: 1};
+    cblite.database("testdb").design("v1").view("most_recent", opts)
+
+Advanced parameters
+
+    cblite.database("testdb").design("help14").view("by_thread", {descending:true,start_key:"['thisid']",end_key: "[{},'thisid']"}).then(function(d){console.log(d)});
+
 ## Testing ##
 Unit tests are implemented using [Jasmine 1.3](http://jasmine.github.io/1.3/introduction.html) and can be run using
 [Karma](http://karma-runner.github.io/).
