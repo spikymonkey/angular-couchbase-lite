@@ -83,7 +83,7 @@
           function (parsedUrl) {
             var headers = {};
             if (parsedUrl.basicAuthToken != "") {
-              headers = {Authorization: 'Basic ' + parsedUrl.basicAuthToken};
+              headers.Authorization = 'Basic ' + parsedUrl.basicAuthToken;
             }
             var actions = {
               'get':  {method: 'GET',  headers: headers},
