@@ -113,6 +113,14 @@
             return server.get().$promise;
           });
         },
+ 
+        url: function () {
+         cbliteUrlPromise.then(
+          function(parsedUrl) {
+           return parsedUrl.urlNoCredentials;
+          }
+         );
+        },
 
         activeTasks: function () {
 //          $log.debug("Asking Couchbase Lite for a list of active tasks");
