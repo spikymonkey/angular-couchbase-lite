@@ -115,7 +115,7 @@
         },
  
         url: function () {
-         cbliteUrlPromise.then(
+         return cbliteUrlPromise.then(
           function(parsedUrl) {
            return parsedUrl.urlNoCredentials;
           }
