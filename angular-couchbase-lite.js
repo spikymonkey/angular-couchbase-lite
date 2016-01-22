@@ -297,7 +297,6 @@
                 save: function (spec) {
                   spec = toDesignDoc(spec);
                   $log.debug("Asking Couchbase Lite to save design document with id [" + designId + "] in database [" + databaseName + "]");
-                  $log.debug(JSON.stringify(spec));
                   return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
                     return document.put(spec).$promise;
                   });
@@ -306,16 +305,16 @@
                   $log.debug("Asking Couchbase Lite to delete design document with id [" + designId + "] in database [" + databaseName + "]");
                   if (!angular.isDefined(revision)) {
                     // get latest revision
-                    return openResource(designString, {db: databaseName, doc: id}).then(function (document) {
+                    return openResource(designString, {db: databaseName, designId: designId}).then(function (document) {
                       var promise = document.get().$promise;
                       return promise.then(function (response) {
-                        return openResource(designString, {db: databaseName, doc: id, rev: response["_rev"]}).then(function (document) {
+                        return openResource(designString, {db: databaseName, designId: designId, rev: response["_rev"]}).then(function (document) {
                           return document.delete().$promise;
                         });
                       });
                     });
                   } else {
-                    return openResource(designString, {db: databaseName, doc: id, rev: revision}).then(function (document) {
+                    return openResource(designString, {db: databaseName, designId: designId, rev: revision}).then(function (document) {
                       return document.delete().$promise;
                     });
                   }
