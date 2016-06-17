@@ -86,11 +86,11 @@
               headers.Authorization = 'Basic ' + parsedUrl.basicAuthToken;
             }
             var actions = {
-              'get':  {method: 'GET',  headers: headers},
-              'list': {method: 'GET',  headers: headers, isArray: true},
-              'put':  {method: 'PUT',  headers: headers},
-              'post': {method: 'POST', headers: headers},
-              'delete': {method: 'DELETE', headers: headers}
+              'get':  {method: 'GET',  headers: headers, ignoreAuthModule: true },
+              'list': {method: 'GET',  headers: headers, isArray: true, ignoreAuthModule: true },
+              'put':  {method: 'PUT',  headers: headers, ignoreAuthModule: true },
+              'post': {method: 'POST', headers: headers, ignoreAuthModule: true },
+              'delete': {method: 'DELETE', headers: headers, ignoreAuthModule: true }
             };
 
             return $resource(parsedUrl.urlNoCredentials + path, paramDefaults, actions);
