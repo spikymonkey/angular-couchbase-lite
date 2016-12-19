@@ -123,7 +123,7 @@
         },
 
         activeTasks: function () {
-//          $log.debug("Asking Couchbase Lite for a list of active tasks");
+          $log.debug("Asking Couchbase Lite for a list of active tasks");
           return openResource('_active_tasks').then(function (server) {
             return server.list().$promise;
           });
@@ -131,7 +131,7 @@
 
         allDatabases: function () {
           var that = this;
-//          $log.debug("Asking Couchbase Lite for list of all databases");
+          $log.debug("Asking Couchbase Lite for list of all databases");
           return openResource('_all_dbs').then(function (allDatabases) {
             return allDatabases.list().$promise.then(function (databaseNames) {
               return databaseNames.map(function (name) {
@@ -177,7 +177,7 @@
             name: function () { return databaseName; },
 
             info: function () {
-//              $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
+              $log.debug("Asking Couchbase Lite for info about database [" + databaseName + "]");
               return openDatabase.then(function (db) {
                 return db.get().$promise;
               });
@@ -237,7 +237,6 @@
               var resourceString = ':db/_all_docs';
               $log.debug("Asking Couchbase Lite to get all documents in database [" + databaseName + "]");
               if (angular.isArray(records)) {
-                $log.debug(JSON.stringify(records));
                 return openResource(resourceString, spec).then(function (docs) {
                   return docs.post({ keys: records }).$promise;
                 });
@@ -338,7 +337,6 @@
                   var viewString = designString + '/_view/:id';
                   $log.debug("Asking Couchbase Lite to query view with id [" + designId + "/" + id + "] in database [" + databaseName + "]");
                   if (angular.isArray(records)) {
-                    $log.debug(JSON.stringify(records));
                     return openResource(viewString, spec).then(function (docs) {
                       return docs.post({ keys: records }).$promise;
                     });
